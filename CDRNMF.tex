@@ -1,0 +1,1360 @@
+%% 
+%% Copyright 2019-2024 Elsevier Ltd
+%% 
+%% Version 2.4
+%% 
+%% This file is part of the 'CAS Bundle'.
+%% --------------------------------------
+%% 
+%% It may be distributed under the conditions of the LaTeX Project Public
+%% License, either version 1.2 of this license or (at your option) any
+%% later version.  The latest version of this license is in
+%%    http://www.latex-project.org/lppl.txt
+%% and version 1.2 or later is part of all distributions of LaTeX
+%% version 1999/12/01 or later.
+%% 
+%% The list of all files belonging to the 'CAS Bundle' is
+%% given in the file `manifest.txt'.
+%% 
+%% Template article for cas-sc documentclass for 
+%% single column output.
+
+%\documentclass[a4paper,fleqn,longmktitle]{cas-sc}
+\documentclass[a4paper,fleqn]{cas-sc}
+
+\usepackage{amsmath, amsfonts, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{remark}{Remark}
+\usepackage{subcaption}
+\usepackage{algorithm}
+\usepackage{algpseudocode} 
+\usepackage[numbers]{natbib}
+\usepackage{rotating}
+\usepackage{float}
+%\usepackage[authoryear]{natbib}
+%\usepackage[authoryear,longnamesfirst]{natbib}
+
+%%%Author macros
+\def\tsc#1{\csdef{#1}{\textsc{\lowercase{#1}}\xspace}}
+\tsc{WGM}
+\tsc{QE}
+\tsc{EP}
+\tsc{PMS}
+\tsc{BEC}
+\tsc{DE}
+%%%
+
+\begin{document}
+\let\WriteBookmarks\relax
+\def\floatpagepagefraction{1}
+\def\textpagefraction{.001}
+\shorttitle{~}
+\shortauthors{Y. Huang et~al.}
+%\begin{frontmatter}
+
+\title [mode = title]{Cascaded Dimensionality Reduction Nonnegative Matrix Factorization for Data Representation}                      
+
+
+\author[1]{Yulei Huang}[
+                        auid=000,bioid=1,
+%                        orcid=0009-0009-0366-7509
+                        ]
+
+\author[2]{Jinlin Ma}[
+						auid=000,bioid=2,
+%						orcid=0009-0009-0366-7509
+						]
+
+%\credit{supervision, writing - review and editing}
+
+\author[1]{Ziping Ma}[
+						auid=000,bioid=3,
+%						orcid=0000-0002-6764-6135
+						]
+
+\cormark[1]
+\ead{2006041@nmu.edu.cn}
+%\credit{Data curation, Conceptualization of this study}
+
+\author[3,4]{Ke Lu}[
+					auid=000,bioid=3,
+%						orcid=0000-0002-6764-6135
+]
+
+\affiliation[1]{organization={School of Mathematics and Information Science, North Minzu University},
+	city={Yinchuan},
+	postcode={750030}, 
+	country={China}}
+	
+ \affiliation[2]{organization={School of Computer Science and Engineering, North Minzu University},
+                	city={Yinchuan},
+                	postcode={750030}, 
+                	country={China}}
+
+\affiliation[3]{organization={School of Engineering Science, University of Chinese Academy of Sciences},
+	city={Beijing},
+	postcode={100049}, 
+	country={China}}
+
+\affiliation[4]{organization={Peng Cheng Laboratory},
+	city={Shenzhen},
+	postcode={518055}, 
+	country={China}}
+	
+\cortext[cor1]{Corresponding author}
+
+\begin{abstract}
+Nonnegative matrix factorization (NMF), as a powerful dimensionality reduction technique, has attracted considerable attention for its excellent interpretability by utilizing relatively few linear combinations of basis vectors to represent the original data. The performance of its dimensionality reduction is affected by the quality and efficiency of finding a suitable collection of basis vectors. However, traditional NMF methods focus more on mining discriminative features rather than the quantity and quality of basis vectors. This may result in uncontrolled dimensionality and make it difficult to identify suitable basis vector sets, which can effectively capture the latent structure in the data. To alleviate these issues, we propose a cascaded dimensionality reduction nonnegative matrix factorization (CDRNMF) method. CDRNMF demonstrates distinctive attributes that differ from existing work as follows. 1) It subtly incorporates a feature selection mechanism into NMF, thereby establishing a novel cascaded dimensionality reduction framework that effectively retains the most representative features. 2) The dimensionality uncontrollability is effectively alleviated by constructing a feature selection matrix to assess and select basis vectors. 3) An optimization method is designed for solving CDRNMF efficiently. Numerical experiments validate that the performance of CDRNMF outperforms other state-of-the-art algorithms.
+\end{abstract}
+
+%\begin{graphicalabstract}
+%\includegraphics{figs/cas-grabs.pdf}
+%\end{graphicalabstract}
+
+%\begin{highlights}
+%\item Research highlights item 1
+%\item Research highlights item 2
+%\item Research highlights item 3
+%\end{highlights}
+
+\begin{keywords}
+	Nonnegative matrix factorization \sep Feature selection \sep Cascaded dimensionality reduction \sep Basis vectors
+\end{keywords}
+
+
+\maketitle
+
+\section{Introduction}
+\label{Introduction}
+
+Nonnegative Matrix Factorization (NMF), as a popular technique to reduce the dimensions of large amounts of high-dimensional data, is widely applied in various fields such as document clustering \cite{2}, hyperspectral unmixing \cite{3,4}, face recognition \cite{5,6}, and so on, due to its remarkable abilities in low-dimensional learning and interpretability \cite{1}.
+
+In contrast to other dimensionality reduction techniques that might involve the inclusion of negative values, NMF concentrates on approximating the decomposition of the original matrix into two low-dimensional nonnegative matrices, specifically, the basis matrix and the coefficient matrix, both of which are subject to nonnegative constraints \cite{7}. This decomposition process facilitates the coefficient matrix to contain the intrinsic low-dimensional representation in the original dataset. More precisely, each sample can be construed as a weighted sum of all basis vectors, by which the weight coefficient is constructed and determined by the element of the corresponding column vector in the coefficient matrix. According to human perception, this depiction inherently embodies the concept of the part-of-whole interpretation \cite{8}. Since the outstanding performance of NMF has garnered considerable attention, numerous NMF variants have been developed to address diverse application scenarios. For example, to overcome the deficiencies of classical NMF methods, which cannot utilize label information, several researchers, including Liu et al. \cite{9}, Peng et al. \cite{10}, and Babaee et al. \cite{11}, have incorporated label information into the NMF framework. To further expand the application scope of NMF, the symmetric NMF variant is performed respectively by a progressive hierarchical alternating least squares method \cite{12}, and a nonnegative multiplicative update (NMU) scheme for community detection \cite{13}. Nevertheless, the compute-intensive of most NMF variants tends to increase computation complexity, thus  researchers \cite{14,15} have dedicated efforts to improve computational efficiency through parallelization techniques. To enhance the robustness of NMF variants \cite{16,17,18}, loss functions such as $H_x$ and $\ell_{2,p}$-norm are employed to effectively alleviate the adverse impact of noise on data decomposition. On the other hand, in the realm of mining the underlyinglocal data structure, graph regularization is ingeniously incorporated into NMF variants by constructing the nearest neighborhood graph to capture the inherent manifold information of data, which significantly enhances data representation capabilities \cite{19,20,21,51,53}. In pursuit of achieving sparse low-dimensional representation, a series of sparse NMF variants with different constraints such as $\ell_{2,1}$-norm \cite{22}, $\ell_{2,1/2}$-norm \cite{23}, $\ell_{log}$-(pseudo) norm \cite{38}, and local coordinate constraints \cite{24} are developed. In summary, these research endeavors exhibit noteworthy performance, which enhances models' capability to effectively meet the requirements of diverse and practical applications.
+
+However, until now, NMF still faces a substantial challenge, i.e., the successful approximation of NMF depends on the quality and quantity of the basis vector \cite{7}. For example, this phenomenon is observed evidently through the process of NMF on the EYale B dataset \cite{24} as illustrated in Fig.1. Especially, NMF is performed on these samples with the dimension of 2414$\times$1024 to generate basis matrix with 38 basis vectors and coefficient matrix, the linear combination of which can represent 2414 original images. That is, such data representation  depends on the quality and quantity of the basis vector in that more discriminative basis vectors can accurately capture the underlying data structures. Although some NMF variants indirectly enhance the quality of basis vectors to some extent by incorporating feature learning and matrix learning \cite{45,46,47}, these methods still fail to directly assess the quality of the basis vectors. Meanwhile, determining the required number of basis vectors remains a significant challenge in applying NMF to real-world tasks. In summary, several issues in NMF methods remain unresolved. Table 1 provides a comparative summary of several state-of-the-art NMF methods and their key characteristics. It is evident that this study focuses on evaluating basis vectors in NMF within an unsupervised framework, which differentiates it from the compared methods.
+
+
+\begin{figure*}[!t]
+	\centering
+	\includegraphics[width=5in]{fig 1}
+	\caption{The basic principles of NMF on the EYale B dataset.}
+	\label{fig_1}
+\end{figure*}
+
+\begin{table}[ht]
+	\centering
+	\caption{Comparison of various NMF methods with respect to key characteristics.}
+	{\footnotesize
+	\begin{tabular}{p{6cm} c c c c c}
+		\toprule
+		\multirow{2}{*}{\textbf{Methods}} & \textbf{Label} & \textbf{Sparse} & \textbf{Local Data} & \multicolumn{2}{c}{\textbf{Basis Vector Assessment}} \\
+		\cline{5-6}
+		& \textbf{Information}  & \textbf{Representation}  & \textbf{Structure}  & \textbf{Quality} & \textbf{Quantity} \\
+		\midrule
+		NMF \cite{7} & \(\times\) & \(\times\) & \(\times\) & \(\times\) & \(\times\) \\
+		\hline
+		Graph regularized (GNMF) \cite{19} & \(\times\) & \(\times\) & \(\checkmark\) & \(\times\) & \(\times\) \\
+		\hline
+		Constrained NMF (CNMF) \cite{9} & \(\checkmark\) & \(\times\) & \(\times\) & \(\times\) & \(\times\) \\
+		\hline
+		Discriminative NMF (DNMF) \cite{11} & \(\checkmark\) & \(\times\) & \(\times\) & \(\times\) & \(\times\) \\
+		\hline
+		NMF with adaptive neighbors (NMFAN) \cite{38} & \(\times\) & \(\times\) & \(\checkmark\) & \(\times\) & \(\times\) \\
+		\hline
+		Dual-graph regularized NMF with sparse and orthogonal constraints (SODNMF) \cite{23} & \(\checkmark\) & \(\checkmark\) & \(\checkmark\) & \(\times\) & \(\times\) \\
+		\hline
+		Elastic NMF (ENMF) \cite{17} & \(\times\) & \(\times\) & \(\checkmark\) & \(\times\) & \(\times\) \\
+		\hline
+		Correntropy based semi-supervised NMF (CSNMF) \cite{10} & \(\checkmark\) & \(\times\) & \(\checkmark\) & \(\times\) & \(\times\) \\
+		\hline
+		Robust log-norm regularized sparse NMF (RLS-NMF) \cite{38} & \(\times\) & \(\checkmark\) & \(\checkmark\) & \(\times\) & \(\times\) \\
+		\hline
+		Robust local-coordinate NMF with adaptive graph (RLNMFAG) \cite{16} & \(\times\) & \(\times\) & \(\checkmark\) & \(\times\) & \(\times\) \\
+		\hline
+		Semi-supervised local coordinate NMF (SLNMF) \cite{24} & \(\checkmark\) & \(\checkmark\) & \(\times\) & \(\times\) & \(\times\) \\
+		\hline
+		Semi-supervised graph regularized NMF with local coordinate (SGLNMF) \cite{24} & \(\checkmark\) & \(\checkmark\) & \(\checkmark\) & \(\times\) & \(\times\) \\
+		\hline
+		Feature weighted NMF (FNMF) \cite{27} & \(\times\) & \(\times\) & \(\checkmark\) & \(\times\) & \(\times\) \\
+		\hline
+		Joint doubly stochastic matrix regularization and dual sparse coding (DSNMF) \cite{22} & \(\times\) & \(\checkmark\) & \(\checkmark\) & \(\times\) & \(\times\) \\
+		\hline
+		Adaptive graph regularized NMF with self-weighted learning (SWAGNMF) \cite{21} & \(\times\) & \(\times\) & \(\checkmark\) & \(\times\) & \(\times\) \\
+		\hline
+		Robust non-negative matrix with adaptive order graph (RNMFAOG) \cite{18} & \(\times\) & \(\times\) & \(\checkmark\) & \(\times\) & \(\times\) \\
+		\hline
+		Deep NMF with joint global and local structure preservation ($\text{Dn}^2\text{MF}^{\text{GL}}$) \cite{23} & \(\times\) & \(\checkmark\) & \(\checkmark\) & \(\times\) & \(\times\) \\
+		\hline
+		Orthogonal Graph regularized NMF model under Sparse Constraints (OGNMFSC) \cite{60} & \(\times\) & \(\checkmark\) & \(\checkmark\) & \(\times\) & \(\times\) \\
+		\hline
+		Robust NMF with self-initiated multigraph contrastive fusion (RNMF-SMGF) \cite{61} & \(\times\) & \(\checkmark\) & \(\checkmark\) & \(\times\) & \(\times\) \\
+		\hline
+		CDRNMF (this study) & \(\times\) & \(\checkmark\) & \(\checkmark\) & \(\checkmark\) & \(\checkmark\) \\
+		\bottomrule
+	\end{tabular}
+	\label{tab:summary}
+	\begin{flushleft}
+		\textit{Note:} "Quality" refers to the ability of basis vectors to effectively capture the latent structures inherent in the data, while "Quantity" denotes the appropriate number of basis vectors required to achieve an effective data representation.
+	\end{flushleft}
+}
+\end{table}
+
+
+
+\subsection{Motivation and overview}
+
+Unlike NMF and other feature extraction methods, feature selection, as another classic dimensionality reduction technique, offers greater readability by preserving the physical meaning of the original features \cite{57,54}. Specifically, its efforts are focused on the evaluation of each feature based on specific criteria and selecting the most representative ones from the original data \cite{55,56}. Inspired by this approach, we aim to develop a mechanism within NMF to assess both the quality and quantity of the basis vectors. With the advancement of feature selection, subspace learning, as a learning framework, has been applied to embedded feature selection through matrix factorization strategies \cite{27,28,52}, which provides the foundation for establishing a unified model with NMF. Building on this, we propose a novel cascaded dimensionality reduction nonnegative matrix factorization (CDRNMF) method.
+
+The overarching goal of CDRNMF is to integrate embedded feature selection into the NMF framework. This involves assessing and selecting an appropriate set of basis vectors based on certain criteria, with the ultimate objective of constructing a cascaded dimensionality reduction framework.
+The cascaded dimensionality reduction framework consists of two interdependent stages: the matrix factorization stage and the representation refinement stage. In the first stage, we aim to build a unified learning model, in which the process of searching for the optimal basis vector and matrix factorization are performed simultaneously, based on the following principles: 1) Considering the one-to-one correspondence between the basis vectors learned in NMF and their corresponding coefficient vectors, the basis vectors are selected according to the significance of features in the coefficient matrix; 2) Creating a feature selection matrix that serves the dual purpose of filtering and evaluating basis vectors.    However, the feature selection matrix obtained in the first stage may not completely eliminate redundant basis vectors. Therefore, a cascaded second-stage dimensionality reduction process, namely the representation refinement stage, is introduced. In this stage, the final number of basis vectors is determined according to the feature importance scores derived from the feature selection mechanism, which leads to a more discriminative low-dimensional representation.
+Furthermore, to inherit excellent characteristics from prior NMF variants, graph regularization terms and sparse constraints are incorporated into the suggested framework. The primary contributions of this paper are summarized as follows.
+
+\begin{itemize}
+	\item To the best of our knowledge, CDRNMF is the first NMF method to integrate an embedded feature selection technique into the NMF framework, focusing on evaluating basis vectors.
+	
+	\item A cascaded dimensionality reduction framework is proposed by constructing a feature selection matrix to determine the number of basis vectors, thus effectively alleviating the challenge of dimensionality uncontrollability in NMF.
+	
+	\item The framework incorporates graph regularization and $\ell_{2,1}$-norm sparse constraint to capture data structure and enhance sparsity. Additionally, an efficient model optimization method is provided.
+\end{itemize}
+
+\subsection{Organization}
+
+The remainder of this paper conforms to the following structure. In Section 2, we review closely related research, including some NMF variants and embedded feature selection methods based on subspace learning. Section 3 presents detailed derivations of CDRNMF. In Section 4, we thoroughly assess and discuss the performance of CDRNMF through a series of numerical experiments, with a particular focus on its efficacy in selecting basis vectors and controlling dimensionality. Finally, section 5 presents the conclusions and future work.
+
+\begin{remark}
+	In NMF, each column of the basis matrix is referred to as a basis vector, and the coefficient matrix encodes the feature representation of each sample as a combination of these basis vectors.
+\end{remark}
+
+\section{Related work}
+\label{Related work}
+
+In this section, we briefly review some representative NMF variants and the subspace learning-based embedded feature selection. In addition, some notations are introduced.
+
+\subsection{Notations}
+
+We clarify the symbols and definitions used in this paper. For instance, let an arbitrary matrix $A=\left[a_1, a_2, \ldots, a_n\right] \in \mathcal{R}^{d \times n}$, where $a_j=\left[a_{1j}, a_{2j}, \ldots, a_{dj}\right]^T$ represents the $j$-th vector of matrix $A$, and $a_{i j}$ denotes the element at the $i$-th row and $j$-th column of matrix $A$. Additionally, the $\ell_{2,1}$-norm of matrix $A$ is defined as $\|A\|_{2,1} = \sum_{i=1}^d \left( \sum_{j=1}^n a_{i j}^2 \right)^{1 / 2}$, and the Frobenius norm is defined as $\|A\|_F = \left( \sum_{i=1}^d \sum_{j=1}^n a_{ij}^2 \right)^{1/2}$.
+
+\subsection{Review of NMF variants}
+
+Recently, various improved NMF variants have emerged to enhance the dimensionality reduction capabilities of NMF. For example, with the development of graph theory, Cai et al. \cite{19} introduced a data graph by encoding local structure information of data space, by which the consistency of local data spatial structure between the coefficient matrix and the original samples is guaranteed. To fully exploit the local structure of the dual space, Shang et al. \cite{29} and Lu et al. \cite{30} introduced the dual graph regularization term to enhance the representation of relationships within the dual space. In contrast to the aforementioned methods that primarily focus on exploring local structures, Peng et al. \cite{51}introduced an innovation to the graph Laplacian that integrates both global and local learning within an augmented kernel space aimed at enhancing intra-class similarity and inter-class separability among features.
+ For enhancing the robustness of NMF, Chen et al. \cite{31}, Huang et al. \cite{32}, and Li et al. \cite{33} replaced the Frobenius norm loss function with $\ell_{2,1}$-norm and $\ell_{2,p}$-norm loss functions, by which discriminative local structure exploration can be investigated. Similarly, Xiong et al. \cite{34} proposed a robust Cauchy-NMF formulation to reduce substantial noise. Recent research has demonstrated that the process of constructing a similarity matrix might be adversely affected by diversity noises in the original data. Therefore, Huang et al. \cite{35} designed a novel strategy to learn the similarity matrix adaptively for the Laplacian graph from the data, that is, to find the optimal k neighborhood for each sample. Similarly, these methods proposed by Tang et al. [16] and Yi et al. \cite{36} adaptively learned the dual graph and also constructed robust loss functions. Additionally, the interpretability of NMF methods heavily relies on the sparsity of solutions. Consequently, achieving sparsity involves employing various techniques such as utilizing a sparse basis matrix using the F-norm \cite{37}, applying a  $\ell_{log}$-(pseudo) norm to a factor matrix \cite{38}, and introducing the non-convex $\ell_{2,1/2}$-norm to encourage sparsity within the coefficient matrix \cite{23}. To avoid the inconvenience of non-convex $\ell_{2,1/2}$-norm in the optimization process, many researchers \cite{22,39,40} adopted $\ell_{2,1}$-norm to yield promising performance. Moreover, many NMF variants, such as the exploration of interconnected information \cite{41,42}, the study of multi-view clustering \cite{43,44}, and the utilization of label information \cite{9,10,11}, have emerged to enhance their overall performance. 
+
+However, the aforementioned methods focus on the exploitation of features that are more representative rather than emphasizing the quality and quantity of basis vectors. For this purpose, some methods are presented to improve the quality of basis vectors. For example, Zhang et al. \cite{45} employed sample labels to assess interclass and intra-class scatter points, subsequently employing them to optimize the basis vectors. Chen et al. \cite{46} considered the diversity of samples as a priori to learn feature weights for guiding matrix factorization. Zhang et al. \cite{47} harnessed principal component analysis (PCA) to acquire the features in the subspace, incorporating them into the NMF framework to steer the factorization process. Hedjam et al. \cite{48} applied a scaling relationship between the cluster centroid and data points to improve the quality of the basis vector. Zhang et al. \cite{49} incorporated NMF based on transformation learning to matrix joint-diagonalization, establishing a two-step process to be more suitable for data representation. However, the above methods indirectly optimize basis vectors to establish a new feature subspace for evaluating their quality, whereas, to our knowledge, a method that directly optimizes basis vectors has not yet been proposed. Moreover, the issue of the quantity of basis vectors persists, which poses a challenge to determining the appropriate subspace dimension.
+
+\subsection{Subspace learning-based embedded feature selection}
+
+In recent years, subspace learning, as an important learning mechanism, has been introduced into the field of embedded feature selection through matrix factorization strategy and has made significant progress \cite{27,28}. The feature selection method based on subspace learning not only focuses on the correlation of features but also considers the distribution pattern of data samples in the subspace, which has excellent interpretability. Its core idea is to find a suitable subspace $ X_r \in \mathcal{R}^{r \times n}$ for the original data matrix $X \in \mathcal{R}^{d \times n}$, with $d \gg r$, to achieve efficient dimensionality reduction of the original data. This mapping process can be expressed as follows:
+\begin{equation}
+	\begin{aligned}
+		&R^*=\arg  \min \left\|X^T-X_r^T N\right\|_F^2 \\
+		&\text { s.t. }|R|=r,
+	\end{aligned}
+\end{equation}
+where $N \in \mathcal{R}^{r \times d}$ is the coefficient matrix. $R$ is the index set containing the selected feature, $|R| $ is the number of elements in $R$. Through matrix factorization, let $X_r^T=X^T M$, then the objective function of subspace learning-based embedded feature selection can be expressed as
+\begin{equation}
+	\begin{aligned}
+		&\left(M^*, N^*\right)=\arg \min \left\|X^T-X^T M N\right\|_F^2 \\
+		&\text { s.t. } M \geq 0, N \geq 0, M^TM=I_r,
+	\end{aligned}			
+\end{equation}
+where $I_r \in \mathcal{R}^{d \times r}$ is an identity matrix, and $M \in \mathcal{R}^{d \times r}$ is a feature selection matrix. Each row or column of $M$ contains no more than one non-zero element, defined as follows \cite{50}:
+\begin{equation}
+	[M]_{i j}=\left\{\begin{array}{l}
+		1, \text { the }  j \text {-th }  \text { element }  \text { of }  R  \text { is }  i, \\
+		0,  \text { otherwise. }
+	\end{array}\right.
+\end{equation}
+
+
+
+\section{Methodology}
+
+In this section, we present a novel cascaded dimensionality reduction method named CDRNMF by integrating the merits of NMF with feature selection. Then, the working principle, the optimization algorithm, and the convergence analysis of CDRNMF method are given.
+
+\subsection{Objective function}
+
+The essence of the classical NMF method is to perform the decomposition of the data matrix $X=\left[x_1, x_2, \ldots, x_n\right] \in \mathcal{R}_{\geq 0}^{d \times n}$ to yield the basis matrix $U=\left[u_1, u_2, \ldots, u_p\right] \in \mathcal{R}_{\geq 0}^{d \times p}$ and the coefficient matrix $V=\left[v_1, v_2, \ldots, v_p\right] \in \mathcal{R}_{\geq 0}^{n \times p}$, so that their product is approximately equal to the original matrix $X$. This relationship can be expressed as follows:
+\begin{equation}
+	X \approx U V^T,
+\end{equation}
+where $n$ is the number of samples, $d$ is the number of features, and $p \leq d n /(d+n)$. Through the process of minimizing the loss between the spaces $X$ and $U V^T$, an appropriate low-dimensional representation of the NMF is achieved, as elaborated below \cite{8}:
+\begin{equation}
+	\begin{aligned}
+		& \left(U^*, V^*\right)=\arg \min \left\|X-U V^T\right\|_F^2 \\
+		& \text { s.t. } U \geq 0, V \geq 0.
+	\end{aligned}
+\end{equation}
+
+In adherence to a parts-based representation method presented by NMF, Eq  (4) is transformed into a linear combination in the data matrix $X$, as presented below:
+\begin{equation}
+	\left\{\begin{array}{c}
+		x_1 \approx v_{11} u_1+v_{12} u_2+v_{13} u_3+\cdots+v_{1 p} u_p \\
+		x_2 \approx v_{21} u_1+v_{22} u_2+v_{23} u_3+\cdots+v_{2 p} u_p \\
+		\cdots \\
+		x_n \approx v_{n 1} u_1+v_{n 2} u_2+v_{n 3} u_3+\cdots+v_{n p} u_p,
+	\end{array}\right.
+\end{equation}
+where $v_{i j}$ is the element of the $i$-th row and the $j$-th column of the matrix $V$. In accordance with Eq. (6), it is evident that NMF is  performed to approximately represent an extensive array of data samples through a small group of basis vectors. Meanwhile, in low-dimensional matrices $U$ and $V$, each basis vector corresponds to its respective coefficient vector, i.e., $v_i$ corresponds to $u_i$ $(i=1,  2, \ldots, p)$. Based on this,  we introduce a  novel  framework, namely  cascaded  dimensionality  reduction  framework,  which  integrates embedded feature  selection based on subspace learning  with  NMF  to  effectively  capture  latent  structures. In  cascaded dimensionality reduction framework, the feature selection is performed on the $p$ features in the coefficient matrix $V$ to effectively eliminate redundant and irrelevant features, and the selection of the basis vector is completed through the one-to-one correspondence between the coefficient vector and the basis vector.
+
+The cascaded dimensionality reduction framework is constructed by expanding to the NMF framework. Let $ U_o \in \mathcal{R}^{d \times m}$, and $V_o \in$ $\mathcal{R}^{n \times m}$ be the optimal solutions of NMF, where $m$ is the number of latent factors, $l<m<p$, $l$ is the second dimensionality reduction dimension. By substituting $U_o$ and $V_o$ into Eq. (5), we obtain
+\begin{equation}
+	\begin{aligned}
+		&\left(U^*, V^*\right)=\arg \min \left\|X-U_o V_o^T\right\|_F^2\\
+		&\text { s.t. } U_o \geq 0, V_o \geq 0 \text {. }
+	\end{aligned}
+\end{equation}
+Based on the framework established in Eq. (7), we construct a feature selection matrix  $W \in \mathcal{R}^{p \times m}$. Let $U_o=U W$ and $V_o=V W$, Eq. (7) can be rewritten as
+\begin{equation}
+	\begin{aligned}
+		& \left(U^*, V^*, W^*\right)=\arg \min \left\|X-U H V^T\right\|_F^2 \\
+		& \text { s.t. } U \geq 0, V \geq 0, W \geq 0, W W^T=H,
+	\end{aligned}
+\end{equation}
+where $W W^T=H \in \mathcal{R}^{m \times m}$, each row or column of $W$ contains no more than one non-zero element, which is defined as follows:
+\begin{equation}
+	[W]_{i j}=\left\{\begin{array}{l}
+		1, \text { the } j \text {-th element of } P \text { is } i, \\
+		0, \quad \text { otherwise. }
+	\end{array}\right.
+\end{equation}
+where $P$ is an index set containing the selected features. The incorporation of matrix factorization into embedded feature selection lays the groundwork for integrating embedded feature selection into Eq. (8). The above process, i.e., learning $V$ through subspace learning-based embedded feature selection, is constructed by the following objective function:
+\begin{equation}
+	\begin{aligned}
+		& \left(U^*, V^*, W^*, F^*\right)=\arg \min \left\|X-U H V^T\right\|_F^2+\alpha\|V-V W F\|_F^2\\
+		& \text { s.t. } U \geq 0, V \geq 0, W \geq 0, W W^T=H,
+	\end{aligned}
+\end{equation}
+where $F \in \mathcal{R}^{m \times p}$ is the auxiliary matrix and $\alpha$ is the balance parameter, the second term is used to learn the appropriate subspace for $V$. Eq. (10)  is the objective function of the initial cascaded dimensionality reduction framework. To illustrate the working principle of the feature selection mechanism in Eq. (10), we introduce an example. In Eq. (6), suppose \( v_1 \) is an irrelevant feature that should be eliminated. Under the influence of the feature selection matrix \( W \), this feature is transformed into a zero vector. Since the corresponding basis vector for \( v_1 \) is \( u_1 \), it can be observed that when \( v_1 = 0 \), the terms associated with \( u_1 \) in Eq. (6) become zero, and thus no longer participate in the reconstruction of the data sample. This process thus achieves the selection and evaluation of the basis vector.
+
+To improve the descriptive ability of Eq. (10) for the local spatial structure, the graph regularization term is used to exploit the local manifold information of the data space \cite{19}. In addition, the $\ell_{2,1}$-norm sparse constraint is applied to the feature selection matrix $W$, which can approximate the irrelevant information in the feature selection matrix to zero and improve the learning ability of the method. In summary, the ultimate objective function of CDRNMF can be expressed as follows:
+\begin{equation}
+	\begin{aligned}
+		& \left(U^*, V^*, W^*, F^*\right)=\arg \min \left\|X-U H V^T\right\|_F^2+\alpha\|V-V W F\|_F^2+\beta\|W\|_{2,1}+\lambda \operatorname{Tr}\left(V^T L_V V\right)\\
+		& \text { s.t. } U \geq 0, V \geq 0, W \geq 0, W W^T=H,
+	\end{aligned}
+\end{equation}
+where $\beta$ is the sparse constraint parameter, $\lambda$ is a graph regularization parameter, $L_V \in \mathcal{R}^{n \times n}$ is a Laplacian matrix and satisfies $L_V=D_V-S_V$ \cite{23}, $S_V \in \mathcal{R}^{n \times n}$ is a similarity matrix containing the distance relationship between the samples, and $D_V \in \mathcal{R}^{n \times n}$ satisfies $\left[D_V\right]_{i i}=\sum_j\left[S_V\right]_{i j}$.
+
+\begin{remark}
+	 The feature selection matrix \( W \) is theoretically expected to satisfy the definition in Eq. (9). Previous feature selection methods based on subspace learning typically impose non-negative and orthogonal constraints on \( W \), resulting in a matrix that is close to one consisting only of 0-1 elements \cite{50}. However, several issues remain: 1) during the learning process, it is challenging for these methods to obtain a matrix that is strictly composed of 0-1 elements;  2) applying orthogonality constraints to \( W \) in Eq. (11) renders the feature selection mechanism ineffective. Therefore, in practical applications, when the \( j \)-th element of \( P \) is \( i \), we extend \( [W]_{ij} = 1 \) to \( [W]_{ij} > 0 \), further enforcing the desired form through non-negative constraint, sparse constraint, and initialization of \( W \). Additionally, to mitigate the potential impact of this adjustment, we perform cascaded dimensionality reduction, which will be discussed in Subsection 3.2.
+\end{remark}
+
+\subsection{Optimization and framework overview}
+
+Since the objective function of the proposed model in Eq. (11) contains four variables, it can be decomposed into four subproblems with only one variable. To optimize these subproblems and update individually, we introduce three Lagrange multipliers, $\Phi, \Psi$ and $\Upsilon$, corresponding to the constraints $U \geq 0, V \geq 0, W \geq 0$. Thus, the Lagrange function of the objective function is represented as
+\begin{equation}
+	L=\left\|X-U H V^T\right\|_F^2+\alpha\|V-V W F\|_F^2+\beta\|W\|_{2,1}+\lambda \operatorname{Tr}\left(V^T L_V V\right)+\operatorname{Tr}\left(\Phi U^T\right)+\operatorname{Tr}\left(\Psi V^T\right)+\operatorname{Tr}\left(\Upsilon W^T\right).
+\end{equation}
+To facilitate the calculation, the diagonal matrix $Q \in R^{m \times m}$ is introduced, and the $i$-th diagonal element of the matrix is defined as
+\begin{equation}
+	Q_{i i}=\frac{1}{2\left\|w_i\right\|_2}.
+\end{equation}
+To ensure the validity of Eq. (13), a very small positive number $\varepsilon$ is set, and Eq. (13) is subsequently transformed to
+\begin{equation}
+	Q_{i i}=\frac{1}{2 \max \left(\left\|w_i\right\|_2, \varepsilon\right)}.
+\end{equation}
+The term $\|W\|_{2,1}$ can be transformed into $\operatorname{Tr}\left(W^T Q W\right)$, and Eq. (12) then becomes
+\begin{equation}
+	L=\left\|X-U H V^T\right\|_F^2+\alpha\|V-V W F\|_F^2+\beta \operatorname{Tr}\left(W^T Q W\right)+\lambda \operatorname{Tr}\left(V^T L_V V\right)+\operatorname{Tr}\left(\Phi U^T\right)+\operatorname{Tr}\left(\Psi V^T\right)+\operatorname{Tr}\left(\Upsilon W^T\right).
+\end{equation}
+
+The objective function is decomposed into four subproblems, and the solved processes using the alternating iteration method are as follows.
+
+(1) Update $U$ by fixing $V, W$, and $F$.
+
+Take the partial derivative of the Eq. (15) with respect to $U$, and get
+\begin{equation}
+	\frac{\partial L}{\partial U}=-2 X V H^T+2 U H V^T V H^T+\Phi. 
+\end{equation}
+From the Karush-Kuhn-Tucker (KKT) condition \cite{29}, we have
+\begin{equation}
+	\left[-2 X V H^T+2 U H V^T V H^T\right]_{i j} u_{i j}=0.
+\end{equation}
+Thus, the iterative update rule of $U$ is as follows:
+\begin{equation}
+	u_{i j} \leftarrow u_{i j} \frac{\left[X V H^T\right]_{i j}}{\left[U H V^T V H^T\right]_{i j}}.
+\end{equation}
+
+(2) Update $V$ by fixing $U, W$, and $F$.
+
+The partial derivative of Eq. (15) relative to $V$ is
+\begin{equation}
+	\frac{\partial L}{\partial V}=-2 X^T U H+2 V H^T U^T U H+2 \alpha V-2 \alpha V F^T W^T-2 \alpha V W F+2 \alpha V W F F^T W^T+2 \lambda L_V V+\Psi.
+\end{equation}
+According to $L_V=D_V-S_V$ and the KKT condition, we have
+\begin{equation}
+	\left[-2 X^T U H+2 V H^T U^T U H+2 \alpha V-2 \alpha V F^T W^T-2 \alpha V W F+2 \alpha V W F F^T W^T+2 \lambda\left(D_V-S_V\right) V\right]_{i j} v_{i j}=0.
+\end{equation}
+Therefore, the iterative update rule of $V$ is as follows:
+\begin{equation}
+	v_{i j} \leftarrow v_{i j} \frac{\left[X^T U H+ \alpha V F^T W^T+ \alpha V W F+\lambda S_V V\right]_{i j}}{\left[V H^T U^T U H+\alpha V+\alpha V W F F^T W^T+\lambda D_V V\right]_{i j}}.
+\end{equation} 
+
+(3) Update $W$ by fixing $U, V$, and $F$.
+
+Take the partial derivative of the Eq. (15) with respect to $W$, and get
+\begin{equation}
+	\begin{aligned}
+		\frac{\partial L}{\partial W} =\;& -2 \alpha V^T V F^T + 2 \alpha V^T V W F F^T + 2 \beta Q W - 2 U^T X V W - 2 V^T X^T U W\\
+		&  + 2 U^T U W W^T V^T V W + 2 V^T V W W^T U^T U W + \Upsilon
+	\end{aligned}
+\end{equation}
+According to KKT condition, we have
+\begin{equation}
+	\begin{aligned}
+		&[ -2 \alpha V^T V F^T + 2 \alpha V^T V W F F^T + 2 \beta Q W 
+		- 2 U^T X V W - 2 V^T X^T U W \\
+		& + 2 U^T U W W^T V^T V W + 2 V^T V W W^T U^T U W ]_{ij} w_{ij} = 0
+	\end{aligned}
+\end{equation}
+Therefore, the iterative update rule of $W$ is as follows:
+\begin{equation}
+	w_{i j} \leftarrow w_{i j} \frac{\left[\alpha V^T V F^T+U^T X V W +  V^T X^T U W\right]_{i j}}{\left[\alpha V^T V W F F^T+\beta Q W+U^T U W W^T V^T V W + V^T V W W^T U^T U W\right]_{i j}}.
+\end{equation}
+
+(4) Update $F$ by fixing $U, V$, and $W$.
+
+Take the partial derivative of the Eq. (15) with respect to $F$, and get
+\begin{equation}
+	\frac{\partial L}{\partial F}=-2 \alpha W^T V^T V+2 \alpha W^T V^T V W F.
+\end{equation}
+Thus, the following iterative update rule for $F$ can be represented as
+\begin{equation}
+	f_{i j} \leftarrow f_{i j} \frac{\left[W^T V^T V\right]_{i j}}{\left[W^T V^T V W F\right]_{i j}}.
+\end{equation}
+
+\textbf{Algorithm 1} provides a detailed description of CDRNMF. The cascaded dimensionality reduction framework of CDRNMF is illustrated in Fig 2, which consists of two stages: the matrix factorization stage and the representation refinement stage. At the matrix factorization stage, a feature selection matrix $W$ is learned, while techniques such as sparse constraints, graph regularization, and subspace learning-based feature selection are incorporated to optimize the basis vectors and yield the corresponding low-dimensional representations. It is important to note that in practical applications, the matrix $W$ obtained from this process does not strictly satisfy the requirement of containing only 0-1 elements, as discussed in \textbf{Remark 2}. This means that some redundant features, under the influence of the matrix $W$, cannot be fully transformed into zero vectors but instead are approximated as near-zero vectors. Although the coefficients of these redundant features are small, they still contribute to the reconstruction of the data samples. To eliminate the influence of these features, the representation refinement stage performs an additional dimensionality reduction. Specifically, the dimension of the final low-dimensional representation $V_{new}$ is determined according to the score $\left\|w_i\right\|_2$ learned by the feature selection mechanism (as described in step 15 of \textbf{Algorithm 1}), which can effectively alleviate the issue of dimensionality uncontrollability and retain high-quality basis vectors.
+
+\begin{algorithm}[h]
+	\caption{CDRNMF algorithm steps.}
+	{\footnotesize
+	\begin{algorithmic}[1]
+		\State \textbf{Input}: Data matrix $X \in \mathcal{R}^{d \times n}$; Parameter $\alpha, \beta, \lambda$ and neighborhood size $k$; The first dimensionality reduction dimension $p$; The iteration time $t$; The number of underlying factors $m$; The maximum number of iterations NIter;
+		\State \textbf{Initialization}: $U=\operatorname{rand}(d, p) ; V=\operatorname{rand}(n, p) ; W=\operatorname{init}(W) ; F=\operatorname{rand}(m, p) ; Q=\operatorname{eye}(m) ;$ Construct the similarity matrix $S_V$;
+		\State \textbf{The first-dimension reduction} (the matrix factorization stage):
+		\State \textbf{for} $t=1$ : Niter
+		\State ~~~~Update $U$ using Eq. (18);
+		\State ~~~~Update $V$ using Eq. (21);
+		\State ~~~~Update $W$ using Eq. (24);
+		\State ~~~~Update $F$ using Eq. (26);
+		\State ~~~~Update $Q$ using Eq. (14);
+		\State ~~~~\textbf{if} the objective function is converged
+		\State ~~~~~~~~\textbf{break}
+		\State ~~~~\textbf{end}
+		\State \textbf{end}
+		\State \textbf{Output1}: $U, V, W$ and $F$, where $V$ is the low-dimensional representation of the first dimensionality reduction.
+		\State \textbf{The second-dimension reduction} (the representation refinement stage): The scores of the features in $V$ are calculated according to $\left\|w_i\right\|_2$, and the scores of features are in the range of $[S C(h)-0.5, S C(h)]$ are selected to obtain a new low-dimensional representation $V_{\text {new }} \in \mathcal{R}^{n \times l}$, where $S C(h)$ is the highest score, and $l$ is the second dimensionality reduction dimension.
+		\State \textbf{Output2}: The final low-dimensional representation $V_{\text {new }}$; The second dimensionality reduction dimension $l$.
+		
+	\end{algorithmic}
+}
+\end{algorithm}
+
+
+
+
+
+
+
+
+\begin{figure*}[h]
+	\centering
+	\includegraphics[width=6.3in]{222}
+	\caption{The framework of CDRNMF method.}
+	\label{fig_2}
+\end{figure*}
+
+
+
+
+\subsection{Convergence analysis}
+
+This section proves the convergence of CDRNMF by showing that the objective function is monotonically decreasing under the update rules (18), (21), (24), and (26). First, \textbf{Definition 1} is introduced \cite{7}.
+
+\begin{definition}
+	A function $M\left(k, k^{\prime}\right)$ exists such that $G(k)$ satisfies the following conditions:
+	\begin{equation}
+		M\left(k, k^{\prime}\right) \geq G(k), M(k, k)=G(k),
+	\end{equation} 
+	where $M\left(k, k^{\prime}\right)$ is an auxiliary function of $G(k)$, and the variable $k$ is updated as follows:
+	\begin{equation}
+		k^{(t+1)}=\arg \min _h M\left(k, k^{(t)}\right),
+	\end{equation}
+	then $G(k)$ is guaranteed to be a non-increasing function.
+\end{definition}
+
+To prove the convergence of the objective function of CDRNMF under the update rule of variable $V$, the following theorem is given.
+
+\begin{theorem}
+	Let $X \in \mathcal{R}^{d \times n}, W \in \mathcal{R}^{p \times m}, H \in \mathcal{R}^{p \times p}, U \in \mathcal{R}^{d \times p}, V \in \mathcal{R}^{n \times p}$ and $F \in \mathcal{R}^{m \times p}$, such that the objective function
+	\begin{equation}
+		G(V)=\left\|X-U H V^T\right\|_F^2+\alpha\|V-V W F\|_F^2+\beta\|W\|_{2,1}+\lambda \operatorname{Tr}\left(V^T L_V V\right). 
+	\end{equation}
+	Assume that there exists an update rule
+	\begin{equation}
+		v_{i j} \leftarrow v_{i j} \frac{\left[X^T U H+\alpha V F^T W^T+\alpha V W F+\lambda S_V V\right]_{i j}}{\left[V H^T U^T U H+\alpha V+\alpha V W F F^T W^T+\lambda D_V V\right]_{i j}},
+	\end{equation}
+	where $v_{i j}$ is the element in the i-th row and j-th column of variable $V$, then the objective function is monotonically decreasing under the update rule of variable $V$.
+\end{theorem}
+
+To prove the monotonicity of the objective function (30) under the update rule of the variable $V$, the terms related to the variable $V$ are preserved, yielding the following function:
+\begin{equation}
+	G(V)=\left\|X-U H V^T\right\|_F^2+\alpha\|V-V W F\|_F^2+\lambda \operatorname{Tr}\left(V^T L_V V\right). 
+\end{equation}
+By solving the first-order partial derivative and the second-order partial derivative of $G(V)$ with respect to $V$, we obtain
+\begin{equation}
+	G_{i j}^{\prime}  =\left[-2 X^T U H+2 V H^T U^T U H+2 \alpha V-2 \alpha V F^T W^T-2 \alpha V W F+2 \alpha V W F F^T W^T+2 \lambda L_V V\right]_{i j}, 
+\end{equation}
+\begin{equation}
+	G_{i j}^{\prime \prime}  =\left[2 H^T U^T U H+2 \alpha W F F^T W^T-2 \alpha W F-2 \alpha F^T W^T\right]_{j j}+[2 \lambda L_V+2 \alpha I]_{i i}. 
+\end{equation}
+
+\begin{lemma}
+	The auxiliary function of $G(V)$ is
+	\begin{equation}
+		M\left(v_{i j}, v_{i j}^{(t)}\right)=G_{i j}\left(v_{i j}^{(t)}\right)+G_{i j}^{\prime}\left(v_{i j}^{(t)}\right)\left(v_{i j}-v_{i j}^{(t)}\right)+\frac{\left[V H^T U^T U H+\alpha V+\alpha V W F F^T W^T+\lambda D_V V\right]_{i j}}{V_{i j}^t}\left(v_{i j}-v_{i j}^{(t)}\right)^2. 
+	\end{equation}
+\end{lemma}
+
+\begin{proof}
+	The Taylor expansion of $G_{i j}\left(v_{i j}\right)$ is
+	\begin{equation}
+		\begin{aligned}
+		&G_{i j}\left(v_{i j}\right)=G_{i j}\left(v_{i j}^{(t)}\right)+G_{i j}^{\prime}\left(v_{i j}^{(t)}\right)\left(v_{i j}-v_{i j}^{(t)}\right)\\
+		& +\left\{\left[H^T U^T U H+\alpha W F F^T W^T- \alpha W F- \alpha F^T W^T\right]_{j j}+[\lambda L_V+\alpha I]_{i i}\right\}\left(v_{i j}-v_{i j}^{(t)}\right)^2. 
+		\end{aligned}
+	\end{equation}
+	We prove the following inequality: $M\left(v_{i j}, v_{i j}^{(t)}\right) \geq G_{i j}\left(v_{i j}\right)$, which is equivalent to
+	\begin{equation}
+		\begin{aligned}
+		&\frac{\left[V H^T U^T U H+\alpha V+\alpha V W F F^T W^T+\lambda D_V V\right]_{i j}}{v_{i j}^t} \\
+		& \geq\left[H^T U^T U H+\alpha W F F^T W^T- \alpha W F- \alpha F^T W^T\right]_{j j}+[\lambda L_V+\alpha I]_{i i}. 
+		\end{aligned}
+	\end{equation}
+	Observe that
+	\begin{equation}
+		\begin{gathered}
+			{\left[V H^T U^T U H+\alpha V+\alpha V W F F^T W^T\right]_{i j}=\sum_{k=1}^n\left[H^T U^T U H+\alpha I+\alpha W F F^T W^T\right]_{i k} v_{k j}^{(t)}} \\
+			\geq\left[H^T U^T U H+\alpha W F F^T W^T\right]_{j j} v_{i j}^{(t)}+[\alpha I]_{i i} v_{i j}^{(t)}
+		\end{gathered},
+	\end{equation}
+	and
+	\begin{equation}
+		{\left[\lambda D_V V\right]_{i j}=\lambda \sum_{k=1}^n\left[D_V\right]_{i k} v_{k j}^{(t)} \geq \lambda\left[D_V\right]_{i i} v_{i j}^{(t)} \geq \lambda\left[D_V-S_V\right]_{i i} v_{i j}^{(t)}=\lambda[L_V]_{i i} v_{i j}^{(t)} }.
+	\end{equation}
+	Eq. (36) is satisfied, and the inequality $M\left(v_{i j}, v_{i j}^{(t)}\right) \geq G_{i j}\left(v_{i j}\right)$ holds. The equation $M\left(v_{i j}, v_{i j}^{(t)}\right)=G_{i j}\left(v_{i j}\right)$ holds when $v_{i j}=$ $v_{i j}^{(t)}$. Thus, $M\left(v_{i j}, v_{i j}^{(t)}\right)$ is an auxiliary function of $G(V)$.
+\end{proof}
+
+\begin{proof}
+	(\textbf{Theorem 1}) The following proves that the variable $V$ is updated under Eq. (28), then Eq. (34) is substituted into Eq. (28), and we get
+	\begin{equation}
+		\begin{aligned}
+			v_{i j}^{(t+1)}=v_{i j}^{(t)}-v_{i j}^{(t)} & \frac{G_{i j}^{\prime}\left(v_{i j}^{(t)}\right)}{2\left[V H^T U^T U H+\alpha V+\alpha V W F F^T W^T+\lambda D_V V\right]_{i j}} \\
+			& =v_{i j}^{(t)} \frac{\left[X^T U H+\alpha V F^T W^T+\alpha V W F+\lambda S_V V\right]_{i j}}{\left[V H^T U^T U H+\alpha V+\alpha V W F F^T W^T+\lambda D_V V\right]_{i j}} .
+		\end{aligned}
+	\end{equation}
+	The above formula is the update rule for the variable $V$ (Eq. (30)). In summary, the conditions of \textbf{Definition 1} and \textbf{Lemma 1} are satisfied, so the objective function of CDRNMF is monotonically decreasing under the update rule of variable $V$, and \textbf{Theorem 1} is proved.
+\end{proof}
+
+Similar to $V$, the update rules for the variables $U, W$ and $F$ also lead to monotonically decreasing objective function values, i.e they are the convergence.
+
+\section{Experiments}
+
+In this section, we conduct a series of experiments on benchmark datasets to validate the exceptional performance of CDRNMF. 
+
+\subsection{Datasets}
+
+The proposed CDRNMF method is evaluated on twelve benchmark datasets including COIL20, COIL100, JAFFE, JAFFE50, Lung, ORL, Orlraws, PIE\underline{~}pose27, TOX\underline{~}171, Umist, warpPIE10P, Yale64, \cite{16,24,27,25} and the detailed descriptions of these datasets are illustrated in Table 2.
+\begin{table}[h]
+	\caption{Details of twelve datasets.}
+	\label{tab:4Dataset}
+	\centering
+	{\footnotesize
+	\begin{tabular}{c c c c c}
+		\hline
+		\textbf{Dataset}&	\textbf{Dimensionality}&	\textbf{Size}&	\textbf{Class}&	\textbf{Type}\\
+		\hline
+		COIL20&	1024&	1440&	20&	Digital image\\
+		COIL100&	1024&	7200&	100&	Digital image\\
+		JAFFE&	676&	213&	10&	Face image\\
+		JAFFE50&	1024&	213&	10&	Face image\\
+		Lung&	3312&	203&	5&	Biological \\
+		ORL&	1024&	400&	40&	Face image\\
+		Orlraws&	10304&	100&	10&	Face image\\
+		PIE\underline{~}pose27&	1024&	2856&	68&	Face image\\
+		TOX\underline{~}171&	5748&	171&	4&	Biological\\
+		Umist&	644&	575&	20&	Face image\\
+		warpPIE10P&	2420&	210&	10&	Face image\\
+		Yale64&	4096&	165&	15&	Face image\\
+		\hline
+	\end{tabular}
+}
+\end{table}
+
+\subsection{Comparison methods}
+
+The main innovation of CDRNMF lies in the development of a framework that directly evaluates the basis vectors, and it is categorized as a graph-based NMF method. Therefore, we compare the performance of the proposed CDRNMF with several benchmark methods, including NMF, GNMF, NMFAN, FRNMF, FNMF, RLNMFAG, FAGPP, OEDFS, OGNMFSC, and  RNMF-SMGF. Among these, GNMF, NMFAN, FNMF, RLNMFAG, OGNMFSC, and  RNMF-SMGF  are graph-based NMF methods. Meanwhile, FRNMF and FNMF employ specific strategies to indirectly improve the quality of basis vectors. In addition, comparisons are also made with other classical dimensionality reduction methods such as FAGPP and OEDFS.  A description of each method is described as follows:
+
+\begin{itemize}
+	\item  NMF \cite{7}: A classical dimensionality reduction technique that extracts latent features by decomposing nonnegative matrices.
+	\item  GNMF \cite{19}: It adopts data graphs to encode geometric information, generate compact representations, and exploit latent semantics and intrinsic geometry.
+	\item NMFAN \cite{35}: Adaptive learning is performed to achieve a more accurate similarity matrix by guiding matrix factorization.
+	\item FRNMF \cite{49}: As an extension of orthogonal NMF, it can improve the scaling relationship between the cluster centroid and data points.
+	\item FNMF \cite{47}: By adaptive learning of feature weights, an efficient optimization algorithm is performed to maintain the diversity of features.
+	\item RLNMFAG \cite{16}: A robust NMF method with adaptive graph is proposed to reduce noise interference through $H_x$ loss function and orthogonal regularization.
+	\item FAGPP \cite{59}: An anchor graph learning method incorporating PCA is proposed to balance cluster-specific and global data representations.
+	\item OEDFS \cite{58}: An unsupervised feature selection method adopts a matrix decomposition strategy to construct encoder and decoder terms that integrate the advantages of self-representation and pseudo-supervised learning.
+	\item OGNMFSC \cite{60}: An orthogonal GNMF method with $\ell_{1}$-norm sparsity constraints is proposed, which fully exploits the geometric structure of data, reduces redundancy, and enhances the sparsity of matrix factorization.
+	\item RNMF-SMGF \cite{61}: It spontaneously generates multiple graph structures from different perspectives of the data and adaptively fuses them, which mitigates the impact of outliers.
+\end{itemize}
+
+\subsection{Evaluation metrics}
+
+Two evaluation metrics, clustering accuracy (ACC) and normalized mutual information (NMI), are used to evaluate the clustering performances \cite{23}. With ranging from 0 to 1 , the higher the values of ACC and NMI, the more excellent the performance is.
+
+\subsection{Experimental settings}
+
+In this subsection, the detailed parameter settings for all methods are described as follows. For graph-based NMF methods, including GNMF, NMFAN, FNMF, RLNMFAG, FAGPP, OGNMFSC,  RNMF-SMGF and CDRNMF, the neighborhood size $k$ is set to a default value of 5, as presented in \cite{19}. For CDRNMF, there are three parameters including $\alpha, \beta$, and $\lambda$, the ranges of which are searched from $\left\{10^{-4}, 10^{-3}, 10^{-2}, 10^{-1}, 10^0, 10^1, 10^2, 10^3, 10^4\right\}$. For the dimensionality reduction dimension $p$ and $l, p$ is set to $c+5$, where $c$ represents the number of classes in the dataset. $l$ is determined by Step 15 in \textbf{Algorithm 1}. In contrast, the reduction dimension of the comparison methods is set to $c$ \cite{47}. For OEDFS, the number of selected features is set to $\left\{50, 100, 150, 200, 250, 300\right\}$. For the rest of parameters in the comparative methods, their value ranges are tuned in $\left\{10^{-4}, 10^{-3}, 10^{-2}, 10^{-1}, 10^0, 10^1, 10^2, 10^3, 10^4\right\}$. In the comparative experiments, we set the maximum number of iterations NIter to 100. When the objective function value $(\mathrm{Obj})$ satisfies the convergence condition $\mid \operatorname{Obj}(t)-\operatorname{Obj}(t-$ 1) $\mid<0.01$, the iteration will be terminated in advance, where $\operatorname{Obj}(t)$ represents the objective function value at the $t$-th iteration. To mitigate the influence of random initialization, the entire experimental procedure is repeated 20 times, and the mean and standard deviation are computed to derive the final results.
+
+\subsection{Clustering results and analysis}
+
+The clustering performance of CDRNMF is compared with ten state-of-the-art dimensionality reduction methods on twelve datasets, and the clustering results are presented in Tables 3, 4, and 5. In these Tables, the best results for each dataset are highlighted in bold, while the second-best results are underscored. As shown in these Tables, it is evident that CDRNMF outperforms the compared methods, thereby demonstrating the superiority of the cascaded dimensionality reduction framework in extracting crucial representative information. The details are summarized as follows.
+
+\begin{table}[htbp]
+	\centering
+	\caption{ACC (MEAN $\pm$ STD $\%$) of different methods on twelve benchmark datasets.}
+	{\footnotesize
+	\begin{tabular}{lcccccc}
+		\hline
+		\textbf{Methods} & \textbf{COIL20} & \textbf{COIL100} & \textbf{JAFFE} & \textbf{JAFFE50} & \textbf{Lung} & \textbf{ORL} \\
+		\hline
+		NMF & 62.80$\pm$3.09 & 46.70$\pm$1.17 & 87.02$\pm$3.79 & 81.83$\pm$5.19 & 47.76$\pm$8.83 & 50.30$\pm$2.46 \\
+		GNMF & 77.80$\pm$2.92 & 58.30$\pm$2.14 & 94.08$\pm$5.85 & 89.32$\pm$3.58 & 85.81$\pm$5.93 & 56.43$\pm$2.40 \\
+		NMFAN & 64.78$\pm$2.83 & 47.25$\pm$1.10 & 87.46$\pm$5.29 & 83.29$\pm$5.22 & 47.78$\pm$8.67 & 52.19$\pm$2.37 \\
+		FRNMF & 63.07$\pm$2.73 & 46.89$\pm$1.21 & 85.40$\pm$3.12 & 82.30$\pm$3.40 & 50.01$\pm$5.45 & 51.06$\pm$3.13 \\
+		FNMF & 70.11$\pm$3.99 & 56.05$\pm$1.16 & \underline{94.48$\pm$5.72} & \underline{93.50$\pm$3.59} & \underline{87.46$\pm$2.63} & \underline{56.50$\pm$2.88} \\
+		RLNMFAG & 73.47$\pm$2.39 & 55.15$\pm$2.01 & 91.53$\pm$4.69 & 85.40$\pm$6.34 & 47.34$\pm$6.03 & 53.80$\pm$2.72 \\
+		FAGPP & 66.49$\pm$2.77 & 48.04$\pm$1.11 & 92.25$\pm$3.37 & 92.18$\pm$5.23 & 66.67$\pm$1.62 & 54.62$\pm$2.52 \\
+		OEDFS & 61.71$\pm$3.28 & 46.03$\pm$1.34 & 85.75$\pm$5.05 & 89.39$\pm$6.02 & 71.63$\pm$6.37 & 49.06$\pm$2.50 \\
+		OGNMFSC & 78.11$\pm$3.25 & 56.80$\pm$1.57 & 93.38$\pm$5.57 & 91.29$\pm$5.75 & 78.50$\pm$8.04 & 55.74$\pm$2.59 \\
+		RNMF-SMGF & \textbf{80.69$\pm$3.44} & \underline{59.42$\pm$2.48} & 90.47$\pm$4.01 & 88.33$\pm$5.33 & 83.40$\pm$4.82 & 53.49$\pm$2.54 \\
+		CDRNMF & \underline{79.84$\pm$2.91} & \textbf{59.52$\pm$1.34} & \textbf{97.23$\pm$2.95} & \textbf{94.03$\pm$5.69} & \textbf{87.68$\pm$4.45} & \textbf{57.76$\pm$1.92} \\
+		\hline
+	
+		\textbf{Methods} & \textbf{Orlraws} & \textbf{PIE\_pose27} & \textbf{TOX-171} & \textbf{Umist} & \textbf{warpPIE10P} & \textbf{Yale64} \\
+		\hline
+		NMF & 76.15$\pm$4.25 & 42.93$\pm$1.16 & 42.66$\pm$3.58 & 38.96$\pm$2.25 & 41.29$\pm$3.39 & 52.06$\pm$3.85 \\
+		GNMF & 78.35$\pm$3.70 & 74.39$\pm$2.18 & 45.15$\pm$3.02 & 59.55$\pm$3.68 & 77.67$\pm$3.85 & 52.91$\pm$2.92 \\
+		NMFAN & 75.65$\pm$4.22 & 43.17$\pm$1.24 & 45.32$\pm$4.20 & 40.57$\pm$2.78 & 41.88$\pm$2.87 & 51.42$\pm$4.22 \\
+		FRNMF & 75.95$\pm$4.62 & 42.98$\pm$2.20 & 43.98$\pm$3.57 & 40.11$\pm$2.06 & 40.10$\pm$2.30 & 51.15$\pm$3.26 \\
+		FNMF & \underline{81.55$\pm$2.72} & 71.93$\pm$2.91 & 45.00$\pm$2.92 & 60.49$\pm$4.30 & \underline{80.74$\pm$4.12} & 53.73$\pm$2.36 \\
+		RLNMFAG & 80.45$\pm$2.80 & \underline{75.63$\pm$2.19} & \underline{45.94$\pm$4.82} & 60.78$\pm$4.10 & 68.38$\pm$5.79 & \underline{54.73$\pm$2.16} \\
+		FAGPP & 77.65$\pm$2.03 & 72.35$\pm$3.30 & 41.52$\pm$0.00 & 40.75$\pm$1.50 & 28.21$\pm$1.37 & 53.85$\pm$4.09 \\
+		OEDFS & 76.25$\pm$4.98 & 40.02$\pm$1.36 & 41.90$\pm$2.34 & 41.68$\pm$1.78 & 47.00$\pm$5.74 & 48.00$\pm$2.78 \\
+		OGNMFSC & 81.00$\pm$3.57 & 74.27$\pm$2.79 & 45.85$\pm$2.28 & 59.63$\pm$3.04 & 76.43$\pm$4.72 & 51.48$\pm$3.54 \\
+		RNMF-SMGF & 80.75$\pm$3.89 & 63.16$\pm$3.08 & 42.66$\pm$3.59 & \textbf{62.21$\pm$3.49} & 44.14$\pm$2.83 & 52.55$\pm$2.70 \\
+		CDRNMF & \textbf{82.50$\pm$2.16} & \textbf{75.87$\pm$2.44} & \textbf{46.20$\pm$3.39} & \underline{62.12$\pm$3.34} & \textbf{80.94$\pm$4.16} & \textbf{54.88$\pm$2.18} \\
+		\hline
+	\end{tabular}
+}
+	\label{tab:comparison}
+\end{table}
+
+\begin{table}[htbp]
+	\centering
+	\caption{NMI (MEAN $\pm$ STD $\%$) of different methods on twelve benchmark datasets.}
+	{\footnotesize
+	\begin{tabular}{lcccccc}
+		\hline
+		\textbf{Methods} & \textbf{COIL20} & \textbf{COIL100} & \textbf{JAFFE} & \textbf{JAFFE50} & \textbf{Lung} & \textbf{ORL} \\
+		\hline
+		NMF & 72.57$\pm$1.90 & 72.60$\pm$0.51 & 85.37$\pm$3.12 & 79.04$\pm$4.21 & 24.95$\pm$10.94 & 70.24$\pm$1.63 \\
+		GNMF & 88.76$\pm$1.07 & 80.41$\pm$1.22 & 94.84$\pm$2.71 & 89.58$\pm$1.41 & 66.71$\pm$4.15 & \underline{74.25$\pm$1.22} \\
+		NMFAN & 74.34$\pm$1.42 & 73.42$\pm$0.49 & 85.79$\pm$3.51 & 80.59$\pm$3.57 & 25.73$\pm$8.71 & 71.49$\pm$1.48 \\
+		FRNMF & 72.32$\pm$1.71 & 72.80$\pm$0.46 & 84.52$\pm$2.85 & 79.50$\pm$2.84 & 30.60$\pm$5.06 & 70.82$\pm$1.78 \\
+		FNMF & 82.60$\pm$3.04 & 78.67$\pm$0.63 & \underline{95.93$\pm$2.17} & \underline{91.90$\pm$1.79} & \underline{67.38$\pm$3.08} & 73.09$\pm$1.48 \\
+		RLNMFAG & 81.35$\pm$1.71 & 76.58$\pm$0.89 & 91.10$\pm$3.71 & 86.04$\pm$3.44 & 25.62$\pm$5.17 & 73.60$\pm$1.81 \\
+		FAGPP & 76.31$\pm$1.58 & 73.91$\pm$0.57 & 90.47$\pm$2.31 & 90.66$\pm$2.13 & 53.78$\pm$0.44 & 73.29$\pm$1.14 \\
+		OEDFS & 72.33$\pm$2.10 & 71.66$\pm$0.40 & 84.56$\pm$3.98 & 90.61$\pm$3.71 & 51.36$\pm$3.19 & 68.50$\pm$1.20 \\
+		OGNMFSC & 88.85$\pm$1.51 & 79.90$\pm$0.62 & 93.53$\pm$2.75 & 91.55$\pm$2.18 & 58.44$\pm$6.91 & 73.76$\pm$1.90 \\
+		RNMF-SMGF & \textbf{89.65$\pm$0.98} & \textbf{84.86$\pm$1.23} & 91.28$\pm$3.78 & 89.97$\pm$2.79 & 58.48$\pm$9.60 & 72.17$\pm$1.90 \\
+		CDRNMF & \underline{89.64$\pm$0.81} & \underline{81.16$\pm$0.60} & \textbf{96.70$\pm$1.70} & \textbf{93.10$\pm$2.73} & \textbf{67.72$\pm$6.10} & \textbf{75.28$\pm$0.92} \\
+		\hline
+		
+		\textbf{Methods} & \textbf{Orlraws} & \textbf{PIE\_pose27} & \textbf{TOX-171} & \textbf{Umist} & \textbf{warpPIE10P} & \textbf{Yale64} \\
+		\hline
+		NMF & 80.30$\pm$3.05 & 71.36$\pm$0.74 & 14.51$\pm$3.85 & 58.93$\pm$1.62 & 49.71$\pm$3.75 & 55.24$\pm$2.21 \\
+		GNMF & 81.64$\pm$2.03 & 87.72$\pm$0.71 & 15.29$\pm$3.69 & 78.80$\pm$1.79 & 83.03$\pm$1.77 & 53.54$\pm$1.62 \\
+		NMFAN & 79.71$\pm$3.18 & 71.50$\pm$0.77 & 16.93$\pm$4.76 & 60.34$\pm$2.10 & 50.19$\pm$2.45 & 55.21$\pm$3.23 \\
+		FRNMF & 78.96$\pm$3.87 & 71.47$\pm$0.86 & 15.29$\pm$4.05 & 59.65$\pm$1.49 & 48.19$\pm$3.17 & 54.18$\pm$2.69 \\
+		FNMF & 83.59$\pm$2.02 & 85.22$\pm$0.95 & 16.42$\pm$4.15 & 78.06$\pm$2.22 & \underline{83.75$\pm$2.57} & 55.11$\pm$1.91 \\
+		RLNMFAG & 84.15$\pm$2.32 & \textbf{91.99$\pm$0.86} & \underline{19.06$\pm$5.84} & 74.94$\pm$2.52 & 80.85$\pm$3.89 & \textbf{58.70$\pm$1.77} \\
+		FAGPP & 82.47$\pm$1.84 & \underline{91.70$\pm$0.98} & 12.42$\pm$0.00 & 59.31$\pm$1.07 & 30.53$\pm$1.66 & 56.27$\pm$2.79 \\
+		OEDFS & 80.73$\pm$3.46 & 69.91$\pm$1.05 & 13.65$\pm$4.23 & 59.49$\pm$1.35 & 55.33$\pm$4.45 & 52.49$\pm$2.03 \\
+		OGNMFSC & 84.39$\pm$2.24 & 87.06$\pm$0.78 & 15.38$\pm$2.91 & 77.79$\pm$1.40 & 81.39$\pm$2.77 & 54.79$\pm$1.86 \\
+		RNMF-SMGF & \underline{84.59$\pm$1.67} & 84.49$\pm$2.34 & 14.64$\pm$4.03 & \textbf{79.94$\pm$2.05} & 59.21$\pm$2.62 & 55.95$\pm$1.42 \\
+		CDRNMF & \textbf{86.89$\pm$1.80} & 88.31$\pm$0.90 & \textbf{20.87$\pm$5.64} & \underline{79.44$\pm$1.89} & \textbf{84.63$\pm$2.76} & \underline{56.60$\pm$1.53} \\
+		\hline
+	\end{tabular}
+}
+	\label{tab:comparison1}
+\end{table}
+
+\begin{table}[htbp]
+	\centering
+	\caption{Computation time (seconds (s)) of different methods on twelve benchmark datasets.}
+	{\footnotesize
+	\begin{tabular}{lcccccc}
+		\hline
+		\textbf{Methods} & \textbf{COIL20} & \textbf{COIL100} & \textbf{JAFFE} & \textbf{JAFFE50} & \textbf{Lung} & \textbf{ORL} \\
+		\hline
+		NMF        & 3.2313 & 22.8033 & 0.3746 & 0.5414 & 1.6065 & 1.0334 \\
+		GNMF       & 3.5198 & 25.3057 & 0.3837 & 0.5967 & 0.9227 & 1.1512 \\
+		NMFAN      & 10.8493 & 363.3305 & 0.4275 & 0.4379 & 0.6104 & 1.2568 \\
+		FRNMF      & 9.1590 & 39.9447 & 1.5023 & 3.0720 & 45.3802 & 4.4336 \\
+		FNMF       & 25.4511 & 135.7201 & 3.0337 & 2.1079 & 7.3766 & 2.8012 \\
+		RLNMFAG    & 4.5631 & 96.6412 & 0.3147 & 0.4317 & 1.0119 & 0.8526 \\
+		FAGPP      & 2.5424 & 32.1676 & 0.4405 & 0.5006 & 0.7177 & 0.6318 \\
+		OEDFS      & 7.7311 & 40.2013 & 0.4935 & 1.2508 & 8.5708 & 3.7124 \\
+		OGNMFSC    & 4.0029 & 28.3382 & 0.4711 & 0.8297 & 8.9491 & 2.1478 \\
+		RNMF-SMGF  & 64.6473 & 6914.7725 & 3.7606 & 3.0879 & 4.0348 & 5.9291 \\
+		CDRNMF     & 6.3624 & 40.9100 & 0.5641 & 0.6079 & 2.0538 & 1.4769 \\
+		\hline
+		
+		\textbf{Methods} & \textbf{Orlraws} & \textbf{PIE\_pose27} & \textbf{TOX-171} & \textbf{Umist} & \textbf{warpPIE10P} & \textbf{Yale64} \\
+		\hline
+		NMF        & 17.0675 & 8.1575 & 7.5599 & 0.6941 & 2.1937 & 4.6676 \\
+		GNMF       & 19.9133 & 8.5542 & 7.0956 & 0.7739 & 2.3834 & 5.0676 \\
+		NMFAN      & 0.5559 & 47.3308 & 0.6672 & 1.9782 & 0.5822 & 0.5858 \\
+		FRNMF      & 621.7328 & 17.1227 & 139.1761 & 2.1621 & 21.1460 & 70.7918 \\
+		FNMF       & 10.3618 & 53.7298 & 19.1165 & 5.9292 & 15.6394 & 5.0847 \\
+		RLNMFAG    & 1.5028 & 16.5066 & 1.4238 & 0.9205 & 0.8352 & 1.0115 \\
+		FAGPP      & 0.3142 & 11.3588 & 0.4581 & 1.2488 & 0.4543 & 0.4659 \\
+		OEDFS      & 72.3707 & 18.5383 & 19.4714 & 2.9243 & 8.7971 & 10.6038 \\
+		OGNMFSC    & 57.6084 & 12.9746 & 20.8733 & 1.1659 & 6.7005 & 14.9502 \\
+		RNMF-SMGF  & 3.7089 & 378.9602 & 5.2154 & 8.4696 & 4.0404 & 4.5317 \\
+		CDRNMF     & 14.2039 & 13.0802 & 10.9907 & 1.0934 & 3.7473 & 4.4150 \\
+		\hline
+	\end{tabular}
+}
+	\label{tab:comparison2}
+\end{table}
+
+
+
+\begin{table}[h!]
+	\centering
+	\caption{Paired t-test results for ACC comparisons between CDRNMF and baseline methods on different datasets.}
+	{\footnotesize
+	\begin{tabular}{lcccccccccc}
+		\toprule
+		\textbf{Datasets} & \multicolumn{2}{c}{\textbf{NMF}} & \multicolumn{2}{c}{\textbf{GNMF}} & \multicolumn{2}{c}{\textbf{NMFAN}} & \multicolumn{2}{c}{\textbf{FRNMF}} & \multicolumn{2}{c}{\textbf{FNMF}} \\
+		\cmidrule(r){2-3} \cmidrule(r){4-5} \cmidrule(r){6-7} \cmidrule(r){8-9} \cmidrule(r){10-11}
+		& \textbf{p} & \textbf{h} & \textbf{p} & \textbf{h} & \textbf{p} & \textbf{h} & \textbf{p} & \textbf{h} & \textbf{p} & \textbf{h} \\
+		\midrule
+		COIL20 & 8.97e-14 & 1 & 2.16e-2 & 1 & 1.11e-11 & 1 & 1.56e-13 & 1 & 5.28e-6 & 1 \\
+		COIL100 & 2.05e-18 & 1 & 3.71e-2 & 1 & 4.09e-17 & 1 & 5.19e-17 & 1 & 7.89e-8 & 1 \\
+		JAFFE & 9.02e-8 & 1 & 5.10e-4 & 1 & 9.00e-8 & 1 & 6.43e-9 & 1 & 4.53e-2 & 1 \\
+		JAFFE50 & 8.73e-8 & 1 & 1.34e-2 & 1 & 2.59e-5 & 1 & 1.00e-6 & 1 & 7.61e-1 & 0 \\
+		Lung & 1.04e-14 & 1 & 8.32e-4 & 1 & 5.12e-14 & 1 & 2.48e-16 & 1 & 8.62e-5 & 1 \\
+		ORL & 1.25e-10 & 1 & 7.45e-3 & 1 & 1.35e-6 & 1 & 2.68e-7 & 1 & 2.18e-2 & 1 \\
+		Orlraws & 1.42e-5 & 1 & 2.30e-8 & 1 & 2.87e-8 & 1 & 4.20e-5 & 1 & 1.86e-6 & 1 \\
+		PIE\_pose27 & 2.39e-21 & 1 & 4.31e-2 & 1 & 7.92e-22 & 1 & 1.24e-20 & 1 & 7.67e-5 & 1 \\
+		TOX\_171 & 3.71e-3 & 1 & 2.97e-8 & 1 & 4.04e-5 & 1 & 7.79e-9 & 1 & 1.89e-11 & 1 \\
+		Umist & 1.12e-17 & 1 & 4.44e-2 & 1 & 7.09e-16 & 1 & 1.07e-14 & 1 & 1.72e-7 & 1 \\
+		warpPIE10P & 3.10e-21 & 1 & 1.53e-2 & 1 & 7.64e-19 & 1 & 9.90e-19 & 1 & 8.46e-1 & 0 \\
+		Yale64 & 4.05e-3 & 1 & 3.53e-2 & 1 & 4.21e-3 & 1 & 8.39e-4 & 1 & 2.01e-3 & 1 \\
+		\midrule
+		\textbf{Datasets} & \multicolumn{2}{c}{\textbf{RLNMFAG}} & \multicolumn{2}{c}{\textbf{FAGPP}} & \multicolumn{2}{c}{\textbf{OEDFS}} & \multicolumn{2}{c}{\textbf{OGNMFSC}} & \multicolumn{2}{c}{\textbf{RNMF-SMGF}} \\
+		\cmidrule(r){2-3} \cmidrule(r){4-5} \cmidrule(r){6-7} \cmidrule(r){8-9} \cmidrule(r){10-11}
+		& \textbf{p} & \textbf{h} & \textbf{p} & \textbf{h} & \textbf{p} & \textbf{h} & \textbf{p} & \textbf{h} & \textbf{p} & \textbf{h} \\
+		\midrule
+		COIL20 & 9.40e-6 & 1 & 1.84e-13 & 1 & 2.60e-13 & 1 & 6.63e-3 & 1 & 3.08e-1 & 0 \\
+		COIL100 & 1.25e-11 & 1 & 1.00e-18 & 1 & 3.98e-17 & 1 & 3.51e-5 & 1 & 8.92e-1 & 0 \\
+		JAFFE & 3.61e-6 & 1 & 1.31e-7 & 1 & 4.98e-4 & 1 & 1.53e-2 & 1 & 2.13e-5 & 1 \\
+		JAFFE50 & 4.74e-6 & 1 & 1.68e-2 & 1 & 3.72e-2 & 1 & 1.46e-2 & 1 & 4.95e-3 & 1 \\
+		Lung & 6.72e-14 & 1 & 1.97e-9 & 1 & 3.68e-14 & 1 & 5.25e-5 & 1 & 2.22e-3 & 1 \\
+		ORL & 6.54e-6 & 1 & 1.10e-11 & 1 & 2.19e-4 & 1 & 1.35e-2 & 1 & 1.08e-7 & 1 \\
+		Orlraws & 5.00e-3 & 1 & 6.34e-6 & 1 & 1.03e-6 & 1 & 9.27e-3 & 1 & 5.75e-3 & 1 \\
+		PIE\_pose27 & 7.68e-1 & 0 & 1.38e-23 & 1 & 8.93e-4 & 1 & 3.89e-2 & 1 & 1.06e-12 & 1 \\
+		TOX\_171 & 8.02e-3 & 1 & 5.17e-4 & 1 & 6.26e-6 & 1 & 6.08e-3 & 1 & 3.52e-3 & 1 \\
+		Umist & 1.94e-2 & 1 & 2.18e-18 & 1 & 1.27e-15 & 1 & 1.57e-2 & 1 & 9.42e-1 & 0 \\
+		warpPIE10P & 7.13e-6 & 1 & 1.12e-15 & 1 & 5.15e-22 & 1 & 2.78e-3 & 1 & 1.35e-16 & 1 \\
+		Yale64 & 8.53e-1 & 0 & 1.31e-7 & 1 & 2.97e-2 & 1 & 3.40e-3 & 1 & 2.88e-3 & 1 \\
+		\bottomrule
+	\end{tabular}
+}
+	\label{tab:t_test_cdrnmf}
+\end{table}
+
+
+\begin{table}[h!]
+	\centering
+	\caption{Paired t-test results for NMI comparisons between CDRNMF and baseline methods on different datasets.}
+	{\footnotesize
+	\begin{tabular}{lcccccccccc}
+		\toprule
+		\textbf{Datasets} & \multicolumn{2}{c}{\textbf{NMF}} & \multicolumn{2}{c}{\textbf{GNMF}} & \multicolumn{2}{c}{\textbf{NMFAN}} & \multicolumn{2}{c}{\textbf{FRNMF}} & \multicolumn{2}{c}{\textbf{FNMF}} \\
+		\cmidrule(r){2-3} \cmidrule(r){4-5} \cmidrule(r){6-7} \cmidrule(r){8-9} \cmidrule(r){10-11}
+		& \textbf{p} & \textbf{h} & \textbf{p} & \textbf{h} & \textbf{p} & \textbf{h} & \textbf{p} & \textbf{h} & \textbf{p} & \textbf{h} \\
+		\midrule
+		COIL20 & 1.95e-17 & 1 & 2.13e-2 & 1 & 3.24e-17 & 1 & 2.82e-18 & 1 & 1.05e-7 & 1 \\
+		COIL100 & 6.60e-23 & 1 & 3.20e-3 & 1 & 2.13e-21 & 1 & 2.53e-20 & 1 & 1.70e-9 & 1 \\
+		JAFFE & 7.68e-14 & 1 & 4.24e-3 & 1 & 8.61e-12 & 1 & 9.18e-13 & 1 & 9.74e-4 & 1 \\
+		JAFFE50 & 5.44e-13 & 1 & 9.86e-5 & 1 & 2.81e-9 & 1 & 1.78e-10 & 1 & 1.07e-1 & 0 \\
+		Lung & 1.15e-13 & 1 & 1.09e-2 & 1 & 1.35e-12 & 1 & 1.31e-16 & 1 & 8.45e-3 & 1 \\
+		ORL & 1.74e-11 & 1 & 6.69e-4 & 1 & 7.44e-8 & 1 & 3.77e-8 & 1 & 3.42e-6 & 1 \\
+		Orlraws & 4.54e-8 & 1 & 2.46e-11 & 1 & 1.95e-10 & 1 & 1.35e-8 & 1 & 8.23e-7 & 1 \\
+		PIE\_pose27 & 6.83e-23 & 1 & 2.41e-2 & 1 & 1.04e-24 & 1 & 9.49e-23 & 1 & 3.36e-9 & 1 \\
+		TOX\_171 & 3.36e-4 & 1 & 5.84e-3 & 1 & 2.28e-2 & 1 & 1.10e-3 & 1 & 1.33e-2 & 1 \\
+		Umist & 1.22e-19 & 1 & 3.54e-2 & 1 & 4.56e-16 & 1 & 8.71e-18 & 1 & 5.06e-4 & 1 \\
+		warpPIE10P & 4.51e-21 & 1 & 4.64e-2 & 1 & 1.32e-18 & 1 & 3.60e-19 & 1 & 2.89e-6 & 1 \\
+		Yale64 & 3.44e-2 & 1 & 7.94e-5 & 1 & 1.20e-3 & 1 & 1.24e-2 & 1 & 2.99e-2 & 1 \\
+		\midrule
+		\textbf{Datasets} & \multicolumn{2}{c}{\textbf{RLNMFAG}} & \multicolumn{2}{c}{\textbf{FAGPP}} & \multicolumn{2}{c}{\textbf{OEDFS}} & \multicolumn{2}{c}{\textbf{OGNMFSC}} & \multicolumn{2}{c}{\textbf{RNMF-SMGF}} \\
+		\cmidrule(r){2-3} \cmidrule(r){4-5} \cmidrule(r){6-7} \cmidrule(r){8-9} \cmidrule(r){10-11}
+		& \textbf{p} & \textbf{h} & \textbf{p} & \textbf{h} & \textbf{p} & \textbf{h} & \textbf{p} & \textbf{h} & \textbf{p} & \textbf{h} \\
+		\midrule
+		COIL20 & 1.14e-10 & 1 & 1.42e-17 & 1 & 3.29e-17 & 1 & 1.13e-3 & 1 & 9.99e-1 & 0 \\
+		COIL100 & 3.16e-16 & 1 & 3.28e-23 & 1 & 4.75e-19 & 1 & 3.88e-6 & 1 & 6.65e-10 & 1 \\
+		JAFFE & 8.49e-7 & 1 & 5.70e-11 & 1 & 1.51e-8 & 1 & 2.50e-4 & 1 & 1.66e-6 & 1 \\
+		JAFFE50 & 5.48e-7 & 1 & 2.88e-2 & 1 & 1.57e-2 & 1 & 8.34e-3 & 1 & 1.11e-3 & 1 \\
+		Lung & 1.18e-13 & 1 & 2.02e-10 & 1 & 4.55e-9 & 1 & 5.74e-5 & 1 & 4.05e-4 & 1 \\
+		ORL & 5.68e-5 & 1 & 2.09e-16 & 1 & 1.87e-5 & 1 & 2.47e-10 & 1 & 4.73e-8 & 1 \\
+		Orlraws & 3.03e-3 & 1 & 2.48e-8 & 1 & 5.54e-8 & 1 & 3.92e-4 & 1 & 9.14e-4 & 1 \\
+		PIE\_pose27 & 4.95e-12 & 1 & 1.07e-23 & 1 & 1.56e-9 & 1 & 9.03e-6 & 1 & 4.86e-9 & 1 \\
+		TOX\_171 & 3.34e-7 & 1 & 5.98e-4 & 1 & 2.11e-6 & 1 & 1.52e-4 & 1 & 3.16e-4 & 1 \\
+		Umist & 1.41e-6 & 1 & 5.33e-21 & 1 & 8.95e-20 & 1 & 4.11e-3 & 1 & 4.87e-1 & 0 \\
+		warpPIE10P & 1.98e-2 & 1 & 2.45e-16 & 1 & 1.47e-25 & 1 & 3.11e-4 & 1 & 2.78e-17 & 1 \\
+		Yale64 & 7.40e-2 & 0 & 1.67e-6 & 1 & 6.14e-3 & 1 & 5.32e-3 & 1 & 1.10e-3 & 1 \\
+		\bottomrule
+	\end{tabular}
+}
+	\label{tab:t_test_nmi_cdrnmf}
+\end{table}
+
+
+
+\begin{enumerate}[(1)]
+	\item Our CDRNMF demonstrates significantly superior performance compared to the other methods in terms of the average value of ACC and the highest improvement of ACC on each dataset, validating the effectiveness of the proposed cascaded dimensionality reduction framework in uncovering discriminative features. For the average values of ACC on 12 datasets, our proposed CDRNMF, NMF, GNMF, NMFAN, FRNMF, FNMF, RLNMFAG, FAGPP, OEDFS, OGNMFSC, and  RNMF-SMGF are 73.15\%, 55.87\%, 70.81\%, 56.73\%, 56.08\%, 70.96\%, 66.05\%, 61.22\%, 58.20\%, 70.21\%, and 66.77\%, respectively.
+	
+	\item On the other hand, the clustering results of these graph-based NMF methods including GNMF, NMFAN, FNMF, RLNMFAG, OGNMFSC, RNMF-SMGF, and CDRNMF surpass those of FRNMF and NMF. This demonstrates that constructing the nearest neighbor graph is highly beneficial for preserving the local geometric structure of the data.
+	
+	\item Performing CDRNMF leads to a significant improvement in efficiency for dimensionality reduction. Specifically, in the Orlraws dataset, the number of feature is observed to be more than 100 times that of the samples, which implies the presence of a considerable amount of irrelevant information that has a negative impact on the effectiveness of dimensionality reduction. However, CDRNMF still achieves highly satisfactory performance on this dataset $(\mathrm{ACC}=82.50 \%, \mathrm{NMI}=86.89 \%)$, confirming its effectiveness in dimensionality reduction. Additionally, the ratio of samples to features varies significantly across the 12 datasets, which indicates that the feature selection mechanism in CDRNMF is effective at identifying a suitable set of basis vectors to represent the original data, regardless of the varying dataset dimensions.
+	
+	\item RNMF-SMGF learns multiple graph structures from samples rotated at different angles (e.g., images) and adaptively fuses them, achieving competitive performance on certain image datasets, such as COIL20 and Umist. However, in terms of the average ACC on 12 datasets, RNMF-SMGF is 6.44\% lower than CDRNMF. This result validates the effectiveness and applicability of CDRNMF, which leverages general data characteristics such as local manifold structures and sparsity to consistently achieve satisfactory performance on diverse types of datasets, such as image and biological datasets.
+	
+	\item From Table 5, the average computation time of NMF, GNMF, NMFAN, FRNMF, FNMF, RLNMFAG, FAGPP, OEDFS, OGNMFSC, RNMF-SMGF, and CDRNMF on the 12 datasets are 5.8276 s, 6.3057 s, 35.7177 s, 81.3019 s, 23.8627 s, 10.5013 s, 4.2750 s, 16.2221 s, 13.2510 s, 616.7632 s, and 8.2921 s, respectively. Therefore, CDRNMF exhibits a faster average runtime except that it is slightly slower than NMF and GNMF by 2.4646 s , and 1.9865 s, respectively. Comprehensive analysis reveals that CDRNMF can consistently achieve promising clustering performance with relatively less time loss compared to most NMF variants, which provides a theoretical basis for its practical application.
+\end{enumerate}
+
+To better illustrate the performance improvement of CDRNMF in Tables 3 and 4, we conduct a paired t-test on the clustering results of CDRNMF and the comparison methods. Specifically, the results in Tables 3 and 4 represent the average values of 20 independent runs for each method. These 20 results are subjected to a paired t-test with a significance level set to 0.05. The paired t-test provides the $h$ and $p$ values for each pair of methods, as shown in Tables 6 and 7. When $h = 0$, the performance difference between CDRNMF and the comparison method is not significant, while $h = 1$ indicates a significant difference. Additionally, the $p$ value reflects the significance level of the test. A smaller $p$ value when $h = 1$ suggests a more pronounced performance difference, which indicates a significant improvement in CDRNMF's performance.
+
+From the results in Tables 6 and 7, it is evident that, for most datasets, $h = 1$ and the $p$ values are small, indicating that CDRNMF significantly outperforms the other methods in terms of performance (ACC and NMI), thus validating the superiority of CDRNMF. It is worth noting that, in Table 4, RLNMFAG achieves a higher NMI value than CDRNMF on the Yale64 dataset. However, the paired t-test results in Table 7 show $h = 0$, which indicates that the NMI difference between CDRNMF and RLNMFAG is not significant. Therefore, it can be concluded that the performance of CDRNMF and RLNMFAG is comparable on Yale64 dataset, with both achieving strong results.
+
+\subsection{The visualization of basis images}
+
+To further illustrate the effectiveness of CDRNMF in seeking optimal basis vectors, the basis images generated by different methods on the Yale64 dataset are visualized as shown in Fig. 3. In Fig. 3(h), original sample images randomly selected from each class in the dataset are depicted, while Fig. 3(a)-(j) visualize the corresponding basis images with ACC values extracted by different methods. As shown in Fig.3, it is observed as follows: 1) In Fig. 3(i), CDRNMF succeeds in learning 12 basis vectors in the first two lines and 6 unclear basis vectors in the last line during the secondary dimensionality reduction process. It is evident that the visualized images in the former are clearer than those in the latter, even in those in Fig. 3(a)-(f) except for Fig. 3(d) and (f). Since most of these visualized images of basis vectors in Fig. 3(d) and (f) are identical even if they are clearer, they fail to precisely describe the diversity of samples through linear combinations. 2) In terms of ACC, CDRNMF achieves the highest score of ACC for these basic images than other compared methods. In conclusion, CDRNMF succeeds in expressing the diversity of samples with these discriminative basic vectors, which further verifies the cascaded dimensionality reduction framework in CDRNMF effectively selects high-quality basis vectors and determines their optimal number.
+\begin{figure}[!t]
+	\centering
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4ji(a)}
+		\caption{NMF (0.5273)}\label{subfig:4ji(a)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4ji(b)}
+		\caption{GNMF (0.5230)}\label{subfig:4ji(b)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4ji(c)}
+		\caption{NMFAN (0.5151)}\label{subfig:4ji(c)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4ji(d)}
+		\caption{FRNMF (0.5189)}\label{subfig:4ji(d)}
+	\end{subfigure}
+	
+	\quad
+	
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4ji(e)}
+		\caption{FNMF (0.5394)}\label{subfig:4ji(e)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4ji(f)}
+		\caption{RLNMFAG (0.5380)}\label{subfig:4ji(f)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4ji(g)}
+		\caption{CDRNMF (0.5636)}\label{subfig:4ji(g)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4ji(h)}
+		\caption{Original Images}\label{subfig:4ji(h)}
+	\end{subfigure}
+	
+	\caption{The visualization of basis images learned by different methods on the Yale64 dataset.}\label{fig:4ji}
+\end{figure}
+
+\subsection{Noise experiment}
+ 
+In this section, we analyze the performance of our proposed CDRNMF on these noisy datasets generated from the ORL dataset and JAFFE50 dataset, with Gaussian noise of variances 15 and 30 added, as shown in Fig. 4(b)-(c) and Fig. 4(e)-(f). Based on the corresponding clustering performance presented in Table 8, the clustering performance of CDRNMF consistently outperforms other methods under different noise conditions, in the presence of such heavy noise interference, as depicted in Fig. 4(c), where a significant blurring of facial features is evident. This further validates the enhanced robustness of CDRNMF in that it is attributed to its cascaded dimensionality reduction framework for extracting representative features.
+\begin{figure}[!t]
+	\centering
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.0\linewidth]{4zao(a)}
+		\caption{ORL}\label{subfig:4zao(a)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.0\linewidth]{4zao(b)}
+		\caption{ORL (15 variance)}\label{subfig:4zao(b)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.0\linewidth]{4zao(c)}
+		\caption{ORL (30 variance)}\label{subfig:4zao(c)}
+	\end{subfigure}
+	
+	\quad
+	
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.0\linewidth]{4zao(d)}
+		\caption{JAFFE50}\label{subfig:4zao(d)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.0\linewidth]{4zao(e)}
+		\caption{JAFFE50 (15 variance)}\label{subfig:4zao(e)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.0\linewidth]{4zao(f)}
+		\caption{JAFFE50 (30 variance)}\label{subfig:4zao(f)}
+	\end{subfigure}
+	
+	\caption{Samples from JAFFE50 and ORL datasets with Gaussian noise with different variances.}\label{fig:4zao}
+\end{figure}
+
+\begin{table}[ht]
+	\centering
+	\caption{Clustering performance (MEAN $\pm$ STD \%) on four noise datasets.}
+	{\footnotesize
+	\begin{tabular}{lcccc}
+		\toprule
+		\textbf{Methods} & \textbf{JAFFE50 (15 variance)} & \textbf{JAFFE50 (30 variance)} & \textbf{ORL (15 variance)} & \textbf{ORL (30 variance)} \\
+		\midrule
+		\multicolumn{5}{c}{\textbf{Accuracy (\%)}} \\
+		\midrule
+		NMF & 80.82$\pm$6.25 & 77.61$\pm$6.68 & 48.85$\pm$2.52 & 44.95$\pm$2.54 \\
+		GNMF & 90.23$\pm$4.31 & 86.88$\pm$5.02 & 53.34$\pm$2.08 & 45.91$\pm$2.30 \\
+		NMFAN & 81.95$\pm$4.58 & 81.22$\pm$5.03 & 51.49$\pm$2.59 & 48.22$\pm$2.16 \\
+		FRNMF & 81.13$\pm$5.56 & 80.82$\pm$3.36 & 49.66$\pm$2.10 & 45.71$\pm$2.63 \\
+		FNMF & 91.65$\pm$2.49 & 88.19$\pm$5.97 & 54.53$\pm$2.28 & 49.44$\pm$0.89 \\
+		RLNMFAG & 84.39$\pm$5.04 & 77.37$\pm$5.09 & 47.54$\pm$2.65 & 42.60$\pm$2.78 \\
+		FAGPP & 89.77$\pm$2.76 & 88.43$\pm$4.38 & 54.54$\pm$2.29 & 51.19$\pm$2.24 \\
+		OEDFS & 88.03$\pm$5.55 & 85.52$\pm$4.31 & 47.74$\pm$2.33 & 40.58$\pm$2.43 \\
+		OGNMFSC & 90.56$\pm$5.82 & 88.92$\pm$3.84 & 54.12$\pm$2.20 & 51.65$\pm$2.24 \\
+		RNMF-SMGF & 88.94$\pm$5.77 & 87.02$\pm$5.96 & 52.84$\pm$2.97 & 46.19$\pm$2.07 \\
+		CDRNMF & \textbf{91.67$\pm$4.12} & \textbf{89.27$\pm$5.38} & \textbf{55.78$\pm$2.02} & \textbf{52.96$\pm$2.55} \\
+		\midrule
+		\multicolumn{5}{c}{\textbf{Normalized Mutual Information (NMI) (\%)}} \\
+		\midrule
+		NMF & 79.05$\pm$3.78 & 76.44$\pm$5.04 & 68.71$\pm$1.70 & 65.45$\pm$1.45 \\
+		GNMF & 89.71$\pm$1.53 & 85.88$\pm$2.30 & 71.65$\pm$1.08 & 66.80$\pm$1.13 \\
+		NMFAN & 79.40$\pm$3.18 & 77.76$\pm$3.71 & 71.29$\pm$1.32 & 68.38$\pm$1.66 \\
+		FRNMF & 78.78$\pm$3.74 & 77.13$\pm$2.87 & 69.09$\pm$1.39 & 65.71$\pm$1.76 \\
+		FNMF & 90.90$\pm$0.98 & 85.74$\pm$2.91 & 72.99$\pm$1.32 & 67.74$\pm$0.64 \\
+		RLNMFAG & 83.01$\pm$3.09 & 74.08$\pm$3.08 & 67.64$\pm$1.41 & 63.11$\pm$1.89 \\
+		FAGPP & 87.36$\pm$2.03 & 86.65$\pm$1.54 & 73.11$\pm$1.40 & 70.84$\pm$1.23 \\
+		OEDFS & 88.84$\pm$2.85 & 87.02$\pm$2.31 & 67.54$\pm$1.54 & 60.76$\pm$1.80 \\
+		OGNMFSC & 90.06$\pm$2.29 & 86.57$\pm$1.17 & 73.72$\pm$1.18 & 68.80$\pm$0.95 \\
+		RNMF-SMGF & 90.37$\pm$3.88 & 86.88$\pm$2.60 & 73.03$\pm$2.13 & 65.77$\pm$1.37 \\
+		CDRNMF & \textbf{91.52$\pm$2.49} & \textbf{88.22$\pm$2.62} & \textbf{73.76$\pm$1.38} & \textbf{71.87$\pm$1.36} \\
+		\bottomrule
+	\end{tabular}
+}
+	\label{tab:acc_nmi_combined}
+\end{table}
+
+
+\subsection{The reconstructed performance from the noisy image}
+
+To demonstrate the reconstructed performance of CDRNMF, we conduct image recovery experiments on these noisy datasets generated from ORL and JAFFE50 with Gaussian noise of variances 30 added, as shown in Fig. 4 (c) and (f). In CDRNMF, The sample matrix $X$ can be approximated by $U_o V_o^T$ (Eq. (7)). The visualizations of $U_o V_o^T$, shown in Fig. 5(c) and Fig. 6(c), represent the reconstructed data corresponding to the two noisy datasets presented in Fig. 5(b) and Fig. 6(b), respectively. To provide a clear illustration, by using a red box we have highlighted the example images in JAFFE50 and ORL in Figs. 5(a) and 6(a) respectively, and the corresponding noised images in Fig. 5(b) and Fig. 6(b), the corresponding constructed images in Fig. 5(c) and Fig. 6(c). It can be observed that CDRNMF succeeds in recovering images from such blurred images in Fig. 5(b) and Fig. 6(b) since the reconstructed images bear a striking resemblance with the corresponding original images except that there exists an inconsistency between the image highlighted with a red frame in Fig. 6(c) and the corresponding original image in Fig. 6(a) due to noise interference. Nevertheless, despite these challenges, CDRNMF still demonstrates strong noise robustness and powerful image representation capabilities.
+\begin{figure}[!t]
+	\centering
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4zaoyuanj(a)}
+		\caption{JAFFE50}\label{subfig:4zaoyuanj(a)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4zaoyuanj(b)}
+		\caption{JAFFE50 (30 variance)}\label{subfig:4zaoyuanj(b)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4zaoyuanj(c)}
+		\caption{CDRNMF}\label{subfig:4zaoyuanj(c)}
+	\end{subfigure}
+	
+	\caption{The visualization of noise learned by CDRNMF on JAFFE50 (30 variance).}\label{fig:4zaoyuanj}
+\end{figure}
+
+\begin{figure}[!t]
+	\centering
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4zaoyuano(a)}
+		\caption{ORL}\label{subfig:4zaoyuano(a)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4zaoyuano(b)}
+		\caption{ORL (30 variance)}\label{subfig:4zaoyuano(b)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4zaoyuano(c)}
+		\caption{CDRNMF}\label{subfig:4zaoyuano(c)}
+	\end{subfigure}
+	
+	\caption{The visualization of noise learned by CDRNMF on ORL (30 variance).}\label{fig:4zaoyuano}
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4shou(a)}
+		\caption{COIL20}\label{subfig:4shou(a)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4shou(b)}
+		\caption{COIL100}\label{subfig:4shou(b)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4shou(c)}
+		\caption{JAFFE}\label{subfig:4shou(c)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4shou(d)}
+		\caption{JAFFE50}\label{subfig:4shou(d)}
+	\end{subfigure}
+	
+	\quad
+	
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4shou(e)}
+		\caption{Lung}\label{subfig:4shou(e)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4shou(f)}
+		\caption{ORL}\label{subfig:4shou(f)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4shou(g)}
+		\caption{Orlraws}\label{subfig:4shou(g)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4shou(h)}
+		\caption{PIE\underline{~}pose27}\label{subfig:4shou(h)}
+	\end{subfigure}
+	
+	\quad
+	
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4shou(i)}
+		\caption{TOX\underline{~}171}\label{subfig:4shou(i)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4shou(j)}
+		\caption{Umist}\label{subfig:4shou(j)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4shou(k)}
+		\caption{warpPIE10P}\label{subfig:4shou(k)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4shou(l)}
+		\caption{Yale64}\label{subfig:4shou(l)}
+	\end{subfigure}
+	\caption{The objective function value (Obj) and the performance (ACC, NMI) of CDRNMF under varying iteration times on 12 datasets.}\label{fig:4shou}
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{ab(a)}
+		\caption{COIL20}\label{subfig:ab(a)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{ab(b)}
+		\caption{COIL100}\label{subfig:ab(b)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{ab(c)}
+		\caption{JAFFE}\label{subfig:ab(c)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{ab(d)}
+		\caption{JAFFE50}\label{subfig:ab(d)}
+	\end{subfigure}
+	
+	\quad
+	
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{ab(e)}
+		\caption{Lung}\label{subfig:ab(e)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{ab(f)}
+		\caption{ORL}\label{subfig:ab(f)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{ab(g)}
+		\caption{Orlraws}\label{subfig:ab(g)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{ab(h)}
+		\caption{PIE\underline{~}pose27}\label{subfig:ab(h)}
+	\end{subfigure}
+	
+	\quad
+	
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{ab(i)}
+		\caption{TOX\underline{~}171}\label{subfig:ab(i)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{ab(j)}
+		\caption{Umist}\label{subfig:ab(j)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{ab(k)}
+		\caption{warpPIE10P}\label{subfig:ab(k)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{ab(l)}
+		\caption{Yale64}\label{subfig:ab(l)}
+	\end{subfigure}
+	\caption{Ablation experiments of CDRNMF on twelve datasets}
+	\label{fig:ab}
+\end{figure}
+
+\begin{figure}[!t]
+	\centering
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4canACCa(a)}
+		\caption{~}\label{subfig:4canACCa(a)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4canACCa(b)}
+		\caption{~}\label{subfig:4canACCa(b)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4canACCa(c)}
+		\caption{~}\label{subfig:4canACCa(c)}
+	\end{subfigure}
+	
+	\caption{The ACC results of CDRNMF on the twelve datasets vary with the parameter $\alpha$.}\label{fig:4canACCa}
+\end{figure}
+
+\begin{figure}[!t]
+	\centering
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4canNMIa(a)}
+		\caption{~}\label{subfig:4canNMIa(a)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4canNMIa(b)}
+		\caption{~}\label{subfig:4canNMIa(b)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4canNMIa(c)}
+		\caption{~}\label{subfig:4canNMIa(c)}
+	\end{subfigure}
+	
+	\caption{The NMI results of CDRNMF on the twelve datasets vary with the parameter $\alpha$.}\label{fig:4canNMIa}
+\end{figure}
+
+\begin{figure}[!t]
+	\centering
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4canACCb(a)}
+		\caption{~}\label{subfig:4canACCb(a)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4canACCb(b)}
+		\caption{~}\label{subfig:4canACCb(b)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4canACCb(c)}
+		\caption{~}\label{subfig:4canACCb(c)}
+	\end{subfigure}
+	
+	\caption{The ACC results of CDRNMF on the twelve datasets vary with the parameter $\beta$.}\label{fig:4canACCb}
+\end{figure}
+
+%\newpage
+\begin{figure}[!t]
+	\centering
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4canNMIb(a)}
+		\caption{~}\label{subfig:4canNMIb(a)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4canNMIb(b)}
+		\caption{~}\label{subfig:4canNMIb(b)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4canNMIb(c)}
+		\caption{~}\label{subfig:4canNMIb(c)}
+	\end{subfigure}
+	
+	\caption{The NMI results of CDRNMF on the twelve datasets vary with the parameter $\beta$.}\label{fig:4canNMIb}
+\end{figure}
+
+\begin{figure}[!t]
+	\centering
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4canACCl(a)}
+		\caption{~}\label{subfig:4canACCl(a)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4canACCl(b)}
+		\caption{~}\label{subfig:4canACCl(b)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4canACCl(c)}
+		\caption{~}\label{subfig:4canACCl(c)}
+	\end{subfigure}
+	
+	\caption{The ACC results of CDRNMF on the twelve datasets vary with the parameter $\lambda$.}\label{fig:4canACCl}
+\end{figure}
+
+\begin{figure}[!t]
+	\centering
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4canNMIl(a)}
+		\caption{~}\label{subfig:4canNMIl(a)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4canNMIl(b)}
+		\caption{~}\label{subfig:4canNMIl(b)}
+	\end{subfigure}
+	\begin{subfigure}[b]{.23\textwidth}
+		\centering
+		\includegraphics[width=1.1\linewidth]{4canNMIl(c)}
+		\caption{~}\label{subfig:4canNMIl(c)}
+	\end{subfigure}
+	
+	\caption{The NMI results of CDRNMF on the twelve datasets vary with the parameter $\lambda$.}\label{fig:4canNMIl}
+\end{figure}
+
+\subsection{Convergence study}
+
+In this section, we conducted validated experiments to demonstrate the convergence of CDRNMF on 12 publicly available datasets, as shown in Fig. 7, The horizontal axis represents the number of iterations, the left vertical axis represents the objective function value of CDRNMF, and the right vertical axis represents the performance ( $\mathrm{ACC}, \mathrm{NMI}$ ) of CDRNMF. It can be seen that the consistently smooth and monotonically decreasing curves of the objective function value on all 12 datasets provide further evidence of the stability and convergence of the proposed method. Additionally, as the objective function values converge, the performance (ACC, NMI) of CDRNMF also stabilizes, reaching its maximum value. Notably, CDRNMF exhibits a remarkable convergence speed since it can achieve convergence results within 100 iterations, highlighting the high efficiency of the optimization method we introduced.
+
+
+\subsection{Ablation experiment}
+
+To investigate the contribution of each component to the overall performance of CDRNMF, we conduct ablation experiments on 12 benchmark datasets, and the results are presented in Fig. 8.
+Specifically, CDRNMF without the graph regularization technique is denoted as CDRNMF-1, and CDRNMF without the feature selection mechanism (degenerating to GNMF \cite{19}) is denoted as CDRNMF-2.
+
+As shown in Fig. 8, the performance of both CDRNMF-1 and CDRNMF-2 reduces, especially that of CDRNMF-1. These results indicate that the graph regularization term plays a critical role in effectively preserving the local manifold structure of the data. Moreover, the feature selection mechanism also contributes to performance improvements by optimizing basis vectors and refining the learned representations.
+
+
+
+\subsection{Parameter Sensitivity experiment}
+
+In this section, parameter sensitivity experiments of CDRNMF are conducted on the 12 datasets in terms of three balance parameters: $\alpha, \beta$, and $\lambda$. As the experimental results shown in Figs. 9-14, the shadow of the curve represents the error. In the experiments, the search range for parameters $\alpha, \beta$, and $\lambda$ are set to $\{10^{-4}, 10^{-3}, 10^{-2}, 10^{-1}, 10^0, 10^1, 10^2,$\\ $10^3, 10^4\}$, while keeping other conditions consistent with Section 4.4. Figs. 9 and 10 depict the variations in ACC and NMI scores with different values of $\alpha$ on the 12 datasets when $\beta=1$ and $\lambda=1$. It can be observed that CDRNMF's clustering performance remains relatively stable when $\alpha$ is in the range of $\left\{10^{-4}, 10^{-3}, 10^{-2}, 10^{-1}, 10^0, 10^1, 10^2\right\}$. Therefore, the suitable range for $\alpha$ should be set to $\left\{10^{-4}, 10^{-3}, 10^{-2}\right.$, $\left.10^{-1}, 10^0, 10^1, 10^2\right\}$. Figs. 11 and 12 depict the variations in ACC and NMI on the 12 datasets when $\alpha=1$ and $\lambda=1$, with different values of $\beta$. It is evident that $\beta$ has a relatively minor impact on CDRNMF's clustering performance on test datasets, indicating its insensitivity. Thus, the suitable range for $\beta$ should be set to $\left\{10^{-4}, 10^{-3}, 10^{-2}, 10^{-1}, 10^0, 10^1, 10^2, 10^3, 10^4\right\}$. Additionally, as in Figs. 13 and 14 show that the highest scores of ACC and NMI on the 12 datasets can be reached in most cases when $\lambda$ is in the range of $\left\{10^2, 10^3, 10^4\right\}, \alpha=1$, and $\beta=1$. Consequently, the range of $\lambda$ should be set to $\left\{10^2, 10^3, 10^4\right\}$.
+
+
+
+
+
+
+
+
+\section{Conclusions}
+
+In this paper, we propose a cascaded dimensionality reduction framework named CDRNMF by embedding feature selection into NMF. The primary contribution of CDRNMF is that the proposed cascaded dimensionality reduction framework effectively identifies an optimal set of base vectors for NMF and alleviates the issue of uncontrollability of dimensionality reduction. Moreover, these features of low-dimensional representations can be efficiently evaluated through feature selection mechanism while retaining the most representative features. Numerous experiments verify the superiority of CDRNMF. The experiments concerning the quality of the basis vectors revealed that the cascaded dimensionality reduction framework significantly improves both the quality and quantity of the optimized basis vectors. Furthermore, CDRNMF exhibits stronger robustness and competitive efficiency in terms of dimensionality reduction when dealing with different types of datasets.
+
+However, there are some limitations in the current work. Specifically, CDRNMF is designed for unsupervised learning, which restricts its ability to fully leverage label information. Furthermore, the method involves some parameters that require tuning, which may result in increased computational cost in practical applications. In future work, we plan to develop a parameter-free cascaded dimensionality reduction framework to mitigate the associated computational burden. We also intend to incorporate label information into the graph regularization term, which would not only improve the utilization of label data but also facilitate the exploration of local data structures.
+
+\section*{Acknowledgments}
+This research was funded by Basic Research Business of Central Universities of North Minzu University (No.2023ZRLG02), Special Fund for High School Scientific Research Project of Ningxia (No. NYG2024066), the National Natural Science Foundation of China (Nos. 62462001).
+
+\section*{Conflict of interest} 
+The authors declare no conflict of interest.
+
+%\printcredits
+
+%% Loading bibliography style file
+\bibliographystyle{model1-num-names}
+%\bibliographystyle{cas-model2-names}
+
+% Loading bibliography database
+\bibliography{cas-refs}
+
+
+%\vskip3pt
+
+
+
+
+\end{document}
+
